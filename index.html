@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minijuegos - Ciencias Naturales</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyB4gsmP4npxwgHRN0882sqG-ruZj1DL0V0",
+        authDomain: "mjcnt-c25a8.firebaseapp.com",
+        projectId: "mjcnt-c25a8",
+        storageBucket: "mjcnt-c25a8.appspot.com",
+        messagingSenderId: "534683522875",
+        appId: "1:534683522875:web:c53aa00beec9888446491e",
+        measurementId: "G-6WB1D5N7Q7"
+      };
+      const app = initializeApp(firebaseConfig);
+      getAnalytics(app);
+      window.firebaseApp = app; // para acceso en script.js
+    </script>
+</head>
+<body>
+    <!-- Pantalla de carga animada -->
+    <div id="loadingScreen">
+        <div class="loader-content">
+            <div class="loader-logo"><span class="logo-molecule">🧬</span></div>
+            <div class="loader-text">CARGANDO...</div>
+            <div class="loader-bar">
+                <div class="loader-fill"></div>
+            </div>
+            <div class="loader-authors">
+                <span>Creado por: <b>Sanvy Corporation</b></span><br>
+                <span>Santino Viana &amp; Dante Gomez.</span>
+                <div class="loader-idea">Idea de 1ro 4ta, Santino Romero & Jeremias.</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="logout-btn hidden" onclick="logout()">Cerrar Sesión</button>
+
+    <!-- Pantalla de Login -->
+    <div id="loginScreen" class="container">
+        <div class="header">
+            <h1>🧬 Ciencias Naturales</h1>
+            <p style="color: white;">Plataforma de Minijuegos Educativos</p>
+        </div>
+        <div class="login-form">
+            <h2 style="text-align: center; margin-bottom: 20px;">Iniciar Sesión</h2>
+            <div class="form-group">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" placeholder="Ej: fila 1, fila 2">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" placeholder="Ingresa tu contraseña">
+            </div>
+            <button class="btn" onclick="login()" style="width: 100%;">Ingresar</button>
+            <div class="demo-info">
+                <h4>🎮 Demo - Credenciales de Acceso (Quizzes):</h4>
+                <p>Usuario: "fila 1" / Contraseña: "fila"</p>
+                <p>Usuario: "fila 2" / Contraseña: "fila"</p>
+                <p>Usuario: "fila 3" / Contraseña: "fila"</p>
+                <p>Usuario: "fila 4" / Contraseña: "fila"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla Principal de Estudiantes -->
+    <div id="studentScreen" class="container hidden">
+        <div class="header">
+            <h1>🧬 Minijuegos de Ciencias</h1>
+        </div>
+        <!-- NUEVA BARRA DE BIENVENIDA ESTILO AZUL -->
+        <div class="user-info-bar fadein" id="userInfoBar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="bienvenida-label"><b>Bienvenida <span id="currentUser"></span></b></span>
+                <span class="fila-badge-bar" id="filaBadge"></span>
+            </div>
+        </div>
+        <div class="minecoins-bar fadein" id="minecoinsBar">
+            <span class="mine-b-symbol">₿</span>
+            <span class="minecoins-amount" id="userCoins">0</span>
+            <span class="mine-b-label">Minecoins</span>
+        </div>
+        <!-- APARTADO DE JUEGOS SEPARADOS POR CATEGORÍA -->
+        <div class="games-section fadein" id="gamesSection">
+            <div class="section-title-bar">
+                <span class="section-title-icon">📝</span>
+                <span class="section-title-text">Quizzes</span>
+            </div>
+            <div class="games-grid">
+                <!-- Quizzes -->
+                <div class="game-card" onclick="openGame('biosfera')">
+                    <div class="game-icon">🌍</div>
+                    <div class="game-title">Quiz de la Biosfera</div>
+                    <div class="game-description">Preguntas sobre ecosistemas y la vida en la Tierra.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('vertebrados')">
+                    <div class="game-icon">🦎</div>
+                    <div class="game-title">Quiz de Vertebrados</div>
+                    <div class="game-description">Mamíferos, aves, reptiles, etc.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('invertebrados')">
+                    <div class="game-icon">🐛</div>
+                    <div class="game-title">Quiz de Invertebrados</div>
+                    <div class="game-description">Insectos, moluscos y más.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('plantas')">
+                    <div class="game-icon">🌱</div>
+                    <div class="game-title">Quiz de Plantas</div>
+                    <div class="game-description">Partes, crecimiento y funciones.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('agua')">
+                    <div class="game-icon">💧</div>
+                    <div class="game-title">Quiz del Agua</div>
+                    <div class="game-description">Propiedades y el ciclo del agua.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('energia')">
+                    <div class="game-icon">⚡</div>
+                    <div class="game-title">Quiz de Energía</div>
+                    <div class="game-description">Fuentes y tipos de energía.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('aire')">
+                    <div class="game-icon">🌬️</div>
+                    <div class="game-title">Quiz del Aire</div>
+                    <div class="game-description">La atmósfera y los gases.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('suelo')">
+                    <div class="game-icon">🌾</div>
+                    <div class="game-title">Quiz del Suelo</div>
+                    <div class="game-description">Tipos de suelo y su importancia.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('cuerpo')">
+                    <div class="game-icon">🧍‍♂️</div>
+                    <div class="game-title">Quiz del Cuerpo Humano</div>
+                    <div class="game-description">Órganos y sistemas del cuerpo.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('sentidos')">
+                    <div class="game-icon">👀</div>
+                    <div class="game-title">Quiz de los Sentidos</div>
+                    <div class="game-description">Los 5 sentidos y sus órganos.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('alimentos')">
+                    <div class="game-icon">🍎</div>
+                    <div class="game-title">Quiz de Alimentos</div>
+                    <div class="game-description">Nutrición y tipos de alimentos.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('animales')">
+                    <div class="game-icon">🦁</div>
+                    <div class="game-title">Quiz de Animales</div>
+                    <div class="game-description">Animales del mundo.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('universo')">
+                    <div class="game-icon">🌌</div>
+                    <div class="game-title">Quiz del Universo</div>
+                    <div class="game-description">Sistema solar y el espacio.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('materia')">
+                    <div class="game-icon">🔬</div>
+                    <div class="game-title">Quiz de la Materia</div>
+                    <div class="game-description">Estados y cambios de la materia.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('tecnologia')">
+                    <div class="game-icon">💻</div>
+                    <div class="game-title">Quiz de Tecnología</div>
+                    <div class="game-description">Inventos, aparatos y ciencia aplicada.</div>
+                    <div class="game-reward">Recompensa: 10 Minecoins</div>
+                </div>
+            </div>
+            <div class="section-title-bar special">
+                <span class="section-title-icon">⭐</span>
+                <span class="section-title-text">Juegos Especiales</span>
+            </div>
+            <div class="games-grid">
+                <div class="game-card" onclick="openGame('memoria')">
+                    <div class="game-icon">🧠</div>
+                    <div class="game-title">Memory Card</div>
+                    <div class="game-description">Encuentra las parejas de animales.</div>
+                    <div class="game-reward">Recompensa: 12-15 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('crucigrama')">
+                    <div class="game-icon">📝</div>
+                    <div class="game-title">Crucigrama</div>
+                    <div class="game-description">Desafío de palabras científicas.</div>
+                    <div class="game-reward">Recompensa: 20 Minecoins</div>
+                </div>
+                <div class="game-card" onclick="openGame('clasificacion')">
+                    <div class="game-icon">🗂️</div>
+                    <div class="game-title">Clasificación</div>
+                    <div class="game-description">Arrastra cada animal a su grupo.</div>
+                    <div class="game-reward">Recompensa: 18 Minecoins</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Administración para Profesora -->
+    <div id="teacherScreen" class="container hidden">
+        <div class="header">
+            <h1>🎓 Panel de Administración</h1>
+            <p style="color: white;">Control de Filas y Minecoins</p>
+        </div>
+        <div class="teacher-panel">
+            <h3 style="margin-bottom: 20px;">Gestión por Filas</h3>
+            <div id="filasManagement"></div>
+            <hr style="margin: 30px 0;">
+            <div class="form-group">
+                <label>Acciones Globales:</label>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="number" id="globalCoins" placeholder="Cantidad" style="flex: 1;">
+                    <button class="btn" onclick="addCoinsToAll()">Dar a Todas las Filas</button>
+                    <button class="btn btn-danger" onclick="removeCoinsFromAll()">Quitar a Todas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Juegos -->
+    <div id="gameModal" class="game-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeGame()">&times;</span>
+            <div id="gameContent"></div>
+        </div>
+    </div>
+
+    <!-- Tu script -->
+    <script type="module" src="script.js"></script>
+    <script>
+        // Pantalla de carga: Ocultar cuando todo esté listo
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('fade-out');
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                }, 300);
+            }, 1400);
+        });
+
+        // Fade in animado para user-info-bar y gamesSection
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(() => {
+                document.getElementById('userInfoBar').classList.add('fadein-show');
+                document.getElementById('gamesSection').classList.add('fadein-show');
+                document.getElementById('minecoinsBar').classList.add('fadein-show');
+            }, 400);
+        });
+    </script>
+</body>
+</html>
