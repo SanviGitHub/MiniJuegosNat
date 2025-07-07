@@ -1,777 +1,1375 @@
+/*
+================================================================================
+|                                                                              |
+|               STYLE.CSS - PROYECTO CIENCIA DIVERTIDA (v3.0)                    |
+|               TEMA: LABORATORIO BIOLUMINISCENTE                              |
+|               AUTOR DE LA MEJORA: GEMINI                                     |
+|                                                                              |
+================================================================================
+*/
+
+/* --- 1. CONFIGURACIÓN GLOBAL Y VARIABLES DE TEMA --- */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;700&display=swap');
+
+:root {
+    /* Paleta de Colores Bioluminiscentes */
+    --color-background: #0d0c1d; /* Azul noche profundo */
+    --color-surface: #1a1a3d;   /* Superficie azulada oscura */
+    --color-primary-glow: #00f5c8; /* Verde neón principal (cian) */
+    --color-secondary-glow: #a955ff; /* Púrpura neón secundario */
+    --color-danger-glow: #ff4757;   /* Rojo neón para errores/peligro */
+    --color-success-glow: #2bff88; /* Verde neón para éxito */
+    --color-warning-glow: #f9ca24; /* Amarillo neón para advertencias */
+
+    /* Fuentes */
+    --font-body: 'Roboto', sans-serif;
+    --font-display: 'Orbitron', sans-serif; /* Fuente tecnológica para títulos */
+
+    /* Sombras y Brillos (¡Clave del tema!) */
+    --shadow-glow-primary: 0 0 5px var(--color-primary-glow),
+                           0 0 15px var(--color-primary-glow),
+                           0 0 30px rgba(0, 245, 200, 0.5);
+    --shadow-glow-secondary: 0 0 5px var(--color-secondary-glow),
+                             0 0 15px var(--color-secondary-glow),
+                             0 0 30px rgba(169, 85, 255, 0.5);
+    --shadow-glow-danger: 0 0 5px var(--color-danger-glow),
+                            0 0 15px var(--color-danger-glow),
+                            0 0 30px rgba(255, 71, 87, 0.5);
+    --shadow-glow-success: 0 0 5px var(--color-success-glow),
+                            0 0 15px var(--color-success-glow),
+                            0 0 30px rgba(43, 255, 136, 0.5);
+
+    /* Otros */
+    --border-radius: 15px;
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.4s ease;
+    --transition-slow: 0.6s ease;
+}
+
+
+/* --- 2. ESTILOS BASE Y FONDO ANIMADO --- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    color: #333;
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: #e0e0e0;
+    line-height: 1.7;
+    overflow-x: hidden;
+    position: relative; /* Para el fondo animado */
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.header {
-    text-align: center;
-    margin-bottom: 30px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
-}
-
-.header h1 {
-    color: white;
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-.user-info {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-}
-
-.minecoins {
-    display: flex;
-    align-items: center;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.coin-icon {
-    width: 30px;
-    height: 30px;
-    background: gold;
-    border-radius: 50%;
-    margin-right: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: #8B4513;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-}
-
-.games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.game-card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
-
-.game-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    border-color: #667eea;
-}
-
-.game-icon {
-    font-size: 3em;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.game-title {
-    font-size: 1.3em;
-    font-weight: bold;
-    margin-bottom: 10px;
-    text-align: center;
-    color: #333;
-}
-
-.game-description {
-    color: #666;
-    text-align: center;
-    margin-bottom: 15px;
-    line-height: 1.4;
-}
-
-.game-reward {
-    background: linear-gradient(45deg, #e8f5e8, #d4f1d4);
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    color: #2d5a2d;
-    font-weight: bold;
-    border: 1px solid #c3e6c3;
-}
-
-.login-form, .teacher-panel {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-.teacher-panel {
-    max-width: 800px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-}
-
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
-.btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    font-weight: bold;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
-.btn-danger {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-}
-
-.btn-success {
-    background: linear-gradient(45deg, #51cf66, #40c057);
-}
-
-.fila-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    background: linear-gradient(45deg, #f8f9fa, #ffffff);
-    transition: all 0.3s ease;
-}
-
-.fila-row:hover {
-    border-color: #667eea;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.fila-info {
-    flex: 1;
-}
-
-.fila-info h4 {
-    color: #333;
-    margin-bottom: 5px;
-    font-size: 1.2em;
-}
-
-.fila-coins {
-    color: #667eea;
-    font-weight: bold;
-    font-size: 1.1em;
-}
-
-.fila-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.fila-controls input {
-    width: 80px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: bold;
-}
-
-.game-modal {
-    display: none;
+/* Fondo de partículas animadas */
+body::before {
+    content: '';
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
+    z-index: -1;
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.05;
+    animation: backgroundPan 120s linear infinite;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary-glow);
+    border-radius: 10px;
+    box-shadow: var(--shadow-glow-primary);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #fff;
+}
+
+/* Contenedor principal */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* --- 3. KEYFRAMES (EL CORAZÓN DE LAS ANIMACIONES) --- */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    animation: slideIn 0.3s ease;
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes slideIn {
-    from { 
-        opacity: 0;
-        transform: translate(-50%, -60%);
+@keyframes backgroundPan {
+    from { background-position: 0% 0%; }
+    to { background-position: 100% 100%; }
+}
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: var(--shadow-glow-primary);
+        transform: scale(1);
     }
-    to { 
-        opacity: 1;
-        transform: translate(-50%, -50%);
+    50% {
+        box-shadow: 0 0 8px var(--color-primary-glow),
+                    0 0 25px var(--color-primary-glow),
+                    0 0 50px rgba(0, 245, 200, 0.7);
+        transform: scale(1.05);
     }
 }
-
-.close-btn {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    cursor: pointer;
-    color: #666;
-    transition: color 0.3s ease;
+@keyframes holographicShine {
+    0% {
+        transform: skewX(-30deg) translateX(-200%);
+    }
+    100% {
+        transform: skewX(-30deg) translateX(200%);
+    }
+}
+@keyframes textFlicker {
+  0% { opacity: 0.8; text-shadow: 0 0 2px var(--color-primary-glow); }
+  5% { opacity: 1; text-shadow: 0 0 4px var(--color-primary-glow); }
+  10% { opacity: 0.7; }
+  15% { opacity: 1; }
+  25% { opacity: 0.6; }
+  30% { opacity: 1; }
+  55% { opacity: 0.8; text-shadow: 0 0 2px var(--color-primary-glow); }
+  60% { opacity: 1; }
+  80% { opacity: 0.7; }
+  100% { opacity: 1; text-shadow: 0 0 4px var(--color-primary-glow); }
+}
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+@keyframes slideInModal {
+    from { transform: translateY(-100px) scale(0.8); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-.close-btn:hover {
-    color: #333;
-}
 
-.question {
-    margin-bottom: 20px;
+.form-group {
+    margin-bottom: 30px;
+    position: relative;
 }
-
-.question h3 {
-    color: #333;
-    margin-bottom: 15px;
-    font-size: 1.3em;
-}
-
-.options {
-    display: grid;
-    gap: 10px;
-    margin: 15px 0;
-}
-
-.option {
-    padding: 15px;
-    background: #f8f9fa;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: left;
-}
-
-.option:hover {
-    background: #e9ecef;
-    border-color: #667eea;
-    transform: translateX(5px);
-}
-
-.option.selected {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-}
-
-.option.correct {
-    background: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
-.option.incorrect {
-    background: #dc3545;
-    color: white;
-    border-color: #dc3545;
-}
-
-.hidden {
-    display: none;
-}
-
-.logout-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: 2px solid white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    z-index: 100;
-}
-
-.logout-btn:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateY(-2px);
-}
-
-.demo-info {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
-    text-align: center;
-    color: #333;
-    border: 2px solid #667eea;
-}
-
-.demo-info h4 {
-    margin-bottom: 15px;
-    color: #667eea;
-    font-size: 1.1em;
-}
-
-.demo-info p {
-    margin-bottom: 5px;
-    font-size: 0.95em;
-}
-
-.demo-info hr {
-    margin: 15px 0;
-    border: none;
-    height: 1px;
-    background: #ddd;
-}
-
-.fila-badge {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: bold;
-    margin-left: 10px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.game-progress {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.progress-bar {
-    background: #e9ecef;
-    height: 10px;
-    border-radius: 5px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-fill {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    height: 100%;
-    transition: width 0.3s ease;
-}
-
-.score-display {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #667eea;
-    margin: 15px 0;
-}
-
-.game-completed {
-    background: linear-gradient(45deg, #51cf66, #40c057);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    margin: 20px 0;
-}
-
-.game-completed h3 {
+.form-group label {
+    display: block;
     margin-bottom: 10px;
-    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--color-primary-glow);
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+}
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    background: rgba(0, 245, 200, 0.1);
+    border: 1px solid var(--color-primary-glow);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1.1em;
+    transition: var(--transition-medium);
+}
+.form-group input:focus {
+    outline: none;
+    box-shadow: var(--shadow-glow-primary);
+    background: rgba(0, 245, 200, 0.2);
+}
+.btn#loginBtn {
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--color-primary-glow);
+    color: var(--color-primary-glow);
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 1.3em;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition: var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+.btn#loginBtn:hover {
+    background: var(--color-primary-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-primary);
+}
+.demo-info {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px dashed rgba(169, 85, 255, 0.5);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--color-secondary-glow);
+}
+.demo-info h4 {
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.coins-earned {
-    font-size: 1.3em;
-    font-weight: bold;
+
+/* --- 5. DASHBOARD DE ESTUDIANTE (HUD - HEADS-UP DISPLAY) --- */
+.header {
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid rgba(0, 245, 200, 0.3);
+}
+.header h1 {
+    font-family: var(--font-display);
+    font-size: 3em;
+    color: var(--color-primary-glow);
+    text-shadow: 0 0 15px var(--color-primary-glow);
+    animation: textFlicker 5s infinite;
+}
+
+/* Barra de bienvenida y monedas */
+#userInfoBar {
+    background: linear-gradient(90deg, rgba(26, 26, 61, 0.5) 0%, rgba(13, 12, 29, 0.7) 100%);
+    border: 1px solid rgba(169, 85, 255, 0.5);
+    backdrop-filter: blur(10px);
+    padding: 20px 30px;
+    border-radius: var(--border-radius);
+    box-shadow: inset 0 0 20px rgba(169, 85, 255, 0.2);
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+#userInfo {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    gap: 20px;
+}
+#currentUserName {
+    font-family: var(--font-display);
+    font-size: 1.8em;
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
+}
+#filaBadge {
+    background: var(--color-secondary-glow);
+    color: var(--color-background);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 700;
+}
+#minecoinsBar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(249, 202, 36, 0.1);
+    border: 1px solid var(--color-warning-glow);
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+#minecoinsBar .coin-icon {
+    font-size: 2em;
+    color: var(--color-warning-glow);
+    text-shadow: 0 0 10px var(--color-warning-glow);
+    animation: textFlicker 4s infinite;
+}
+#userCoins {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #fff;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .container {
-        padding: 15px;
+/* Botón de Logout */
+#logoutBtn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: transparent;
+    color: var(--color-danger-glow);
+    border: 2px solid var(--color-danger-glow);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: var(--transition-fast);
+}
+#logoutBtn:hover {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-danger);
+}
+
+
+/* --- 6. TARJETAS DE JUEGO (HOLOGRÁFICAS) --- */
+.section-title-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 60px 0 30px 0;
+    padding-left: 20px;
+    border-left: 4px solid var(--color-primary-glow);
+}
+.section-title-text {
+    font-family: var(--font-display);
+    font-size: 2.2em;
+    color: #fff;
+}
+.section-title-bar.special {
+    border-left-color: var(--color-secondary-glow);
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 40px;
+}
+
+.game-card {
+    background: linear-gradient(135deg, rgba(26, 26, 61, 0.3) 0%, rgba(169, 85, 255, 0.1) 100%);
+    border: 1px solid rgba(169, 85, 255, 0.3);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: var(--transition-medium);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+.game-card:hover {
+    transform: translateY(-15px) scale(1.03);
+    border-color: var(--color-secondary-glow);
+    box-shadow: var(--shadow-glow-secondary);
+}
+/* Efecto de brillo que pasa por encima */
+.game-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    transform: skewX(-30deg) translateX(-200%);
+    transition: var(--transition-slow);
+}
+.game-card:hover::before {
+    animation: holographicShine 1.5s ease-out;
+}
+.game-icon {
+    font-size: 3.5em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--color-primary-glow);
+    text-shadow: 0 0 15px var(--color-primary-glow);
+    transition: var(--transition-medium);
+}
+.game-card:hover .game-icon {
+    color: #fff;
+    transform: scale(1.2);
+    text-shadow: 0 0 25px #fff;
+}
+.game-title {
+    font-family: var(--font-display);
+    font-size: 1.6em;
+    font-weight: 700;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 15px;
+}
+.game-description {
+    color: #ccc;
+    text-align: center;
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+.game-reward {
+    background-color: rgba(0, 245, 200, 0.1);
+    border: 1px solid var(--color-primary-glow);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    color: var(--color-primary-glow);
+    font-weight: 700;
+    margin-top: auto;
+}
+
+/* --- 7. MODAL DEL JUEGO (INTERFAZ DE MISIÓN) --- */
+.game-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(13, 12, 29, 0.8);
+    backdrop-filter: blur(5px);
+    animation: fadeIn var(--transition-medium);
+}
+.modal-content {
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary-glow);
+    margin: 5% auto;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 900px;
+    position: relative;
+    box-shadow: var(--shadow-glow-primary);
+    animation: slideInModal var(--transition-medium);
+}
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    color: var(--color-danger-glow);
+    font-size: 3em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+.close-btn:hover {
+    transform: rotate(180deg) scale(1.2);
+    text-shadow: var(--shadow-glow-danger);
+}
+.game-content h2 { /* Título del juego */
+    font-family: var(--font-display);
+    font-size: 2.5em;
+    color: var(--color-primary-glow);
+    text-shadow: 0 0 10px var(--color-primary-glow);
+    text-align: center;
+    margin-bottom: 30px;
+}
+.game-content h3 { /* La pregunta del quiz */
+    font-size: 1.8em;
+    font-weight: 400;
+    margin: 30px 0;
+    text-align: center;
+    color: #fff;
+    padding: 20px;
+    background: rgba(0, 245, 200, 0.1);
+    border-radius: 10px;
+}
+.progress-bar {
+    background-color: rgba(255,255,255,0.1);
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--color-primary-glow);
+    padding: 3px;
+    overflow: visible;
+}
+.progress-fill {
+    background: var(--color-primary-glow);
+    height: 100%;
+    width: 0%;
+    border-radius: 8px;
+    transition: width var(--transition-medium);
+    box-shadow: var(--shadow-glow-primary);
+}
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 30px;
+}
+.option {
+    background: transparent;
+    padding: 25px;
+    border: 2px solid var(--color-secondary-glow);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 1.2em;
+    color: #fff;
+    transition: var(--transition-fast);
+}
+.option:hover {
+    background: rgba(169, 85, 255, 0.2);
+    box-shadow: var(--shadow-glow-secondary);
+}
+.option.correct {
+    background: var(--color-success-glow);
+    color: var(--color-background);
+    border-color: var(--color-success-glow);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-glow-success);
+}
+.option.incorrect {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    border-color: var(--color-danger-glow);
+    animation: shake 0.5s;
+}
+.option.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+.game-completed {
+    text-align: center;
+    padding: 30px;
+}
+.game-completed h3 {
+    font-family: var(--font-display);
+    font-size: 3em;
+    color: var(--color-success-glow);
+    text-shadow: 0 0 15px var(--color-success-glow);
+    margin-bottom: 20px;
+}
+
+.results-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Espacio entre los botones */
+    margin-top: 30px;
+    flex-wrap: wrap; /* Para que se acomoden en pantallas chicas */
+}
+
+.results-buttons .btn {
+    width: auto;
+    padding: 15px 40px;
+    border-width: 2px;
+}
+.btn-close-results {
+    border-color: var(--color-danger-glow);
+    color: var(--color-danger-glow);
+}
+.btn-close-results:hover {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-danger);
+}
+
+
+/* --- 8. PANEL DE ADMINISTRADOR (MASTER CONTROL) --- */
+#teacherScreen {
+    background: var(--color-surface);
+    border: 1px solid var(--color-secondary-glow);
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-glow-secondary);
+}
+#teacherScreen .header h1 {
+    color: var(--color-secondary-glow);
+    text-shadow: 0 0 15px var(--color-secondary-glow);
+}
+#teacherPanel {
+    font-family: 'Courier New', Courier, monospace;
+}
+.fila-row {
+    background-color: rgba(13, 12, 29, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid var(--color-primary-glow);
+    transition: var(--transition-fast);
+}
+.fila-row:hover {
+    border-left-color: var(--color-secondary-glow);
+    transform: translateX(10px);
+}
+.fila-info h4 {
+    font-size: 1.5em;
+    color: #fff;
+    text-transform: uppercase;
+}
+.fila-coins {
+    color: var(--color-warning-glow);
+    font-weight: 700;
+    font-size: 1.2em;
+}
+.fila-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+.fila-controls input {
+    width: 100px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--color-secondary-glow);
+    background: rgba(169, 85, 255, 0.1);
+    color: #fff;
+    text-align: center;
+}
+.fila-controls .btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: #0d0c1d;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition-fast);
+}
+.btn-success { background-color: var(--color-success-glow); }
+.btn-danger { background-color: var(--color-danger-glow); }
+.btn-success:hover, .btn-danger:hover {
+    transform: scale(1.1);
+}
+#globalManagement {
+    margin-top: 40px;
+    padding: 30px;
+    border: 1px dashed var(--color-secondary-glow);
+    border-radius: 10px;
+}
+#globalManagement h3 {
+    text-align: center;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    color: var(--color-secondary-glow);
+}
+.global-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+#globalCoins {
+    width: 150px;
+}
+
+
+/* --- 9. RESPONSIVIDAD --- */
+@media (max-width: 900px) {
+    .options {
+        grid-template-columns: 1fr;
     }
-    
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+    #userInfoBar {
+        flex-direction: column;
+    }
+}
+@media (max-width: 600px) {
     .header h1 {
         font-size: 2em;
     }
-    
-    .games-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .modal-content {
+        padding: 20px;
     }
-    
-    .user-info {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
+    .game-content h2 {
+        font-size: 1.8em;
     }
-    
+    .game-content h3 {
+        font-size: 1.3em;
+    }
     .fila-row {
         flex-direction: column;
-        gap: 15px;
-        text-align: center;
+        gap: 20px;
     }
-    
-    .fila-controls {
-        justify-content: center;
+    .global-controls {
+        flex-direction: column;
     }
-    
-    .logout-btn {
-        top: 10px;
-        right: 10px;
-        padding: 8px 15px;
-        font-size: 14px;
+    #logoutBtn {
+        position: static;
+        margin-top: 20px;
+        width: 100%;
+    }
+    #userInfoBar {
+        padding: 20px;
     }
 }
 
-#loadingScreen {
-    position: fixed;
-    z-index: 10000;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.6s;
-    opacity: 1;
-}
-
-#loadingScreen.fade-out {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.loader-content {
-    text-align: center;
-    animation: fadeInUp 0.7s;
-}
-@keyframes fadeInUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.loader-logo {
-    font-size: 3.5rem;
-    margin-bottom: 1.1em;
-    animation: spinlogo 2.5s linear infinite;
-    display: flex;
-    justify-content: center;
-}
-.logo-molecule {
-    display: inline-block;
-    filter: drop-shadow(0 2px 6px #aaa);
-}
 @keyframes spinlogo {
-    0% { transform: rotate(-10deg);}
-    90% { transform: rotate(10deg);}
-    100% { transform: rotate(-10deg);}
+    0%, 100% { transform: rotate(-5deg) scale(1); } 
+    50% { transform: rotate(5deg) scale(1.1); }
 }
 
-.loader-text {
-    font-size: 1.6em;
-    letter-spacing: 4px;
-    color: #333;
-    margin-bottom: 1em;
-    font-weight: bold;
-    font-family: 'Montserrat', Arial, sans-serif;
-}
-.loader-bar {
-    background: #e0e0e0;
-    border-radius: 10px;
-    margin: 0 auto 1.3em;
-    width: 220px;
-    height: 14px;
-    box-shadow: 0 2px 9px 0 #bdbdbd;
-    overflow: hidden;
-    max-width: 85vw;
-    position: relative;
-}
-.loader-fill {
-    background: linear-gradient(90deg, #667eea, #764ba2, #51cf66 80%);
-    width: 0;
-    height: 100%;
-    border-radius: 10px;
-    animation: loaderfill 1.2s cubic-bezier(.68,-0.55,.27,1.55) 0.2s forwards;
-}
+
 @keyframes loaderfill {
     from { width: 0; }
     to { width: 100%; }
 }
-
-.loader-authors {
-    margin-top: 2em;
-    font-size: 1.15em;
-    color: #222;
-    font-family: 'Montserrat', Arial, sans-serif;
-    line-height: 1.6;
-    background: rgba(255,255,255,0.72);
-    display: inline-block;
-    padding: 18px 30px 13px 30px;
-    border-radius: 16px;
-    box-shadow: 0 2px 10px 0 #bdbdbd38;
-    font-weight: 500;
+#loadingScreen {
+    position: fixed; z-index: 10000; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--color-background);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
 }
-.loader-authors b {
-    color: #764ba2;
+#loadingScreen.fade-out {
+    opacity: 0;
+    visibility: hidden; /* Asegura que no se pueda interactuar con él */
+}
+/* Estilos del loader (reforzados) */
+.loader-content { text-align: center; animation: fadeInUp 0.7s; }
+.loader-logo { font-size: 4em; margin-bottom: 20px; animation: spinlogo 3s ease-in-out infinite; color: var(--color-primary-glow); }
+.loader-text { font-family: var(--font-display); font-size: 1.5em; letter-spacing: 5px; color: #fff; margin-bottom: 20px; }
+.loader-bar { background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 auto 20px; width: 250px; height: 15px; overflow: hidden; border: 1px solid var(--color-primary-glow); }
+.loader-fill { background: var(--color-primary-glow); width: 0; height: 100%; animation: loaderfill 1.2s ease-out 0.2s forwards; }
+
+/* Botón de Logout ahora es FIJO para estar siempre visible */
+.logout-btn {
+    position: fixed; /* ¡LA CLAVE! */
+    top: 20px;
+    right: 20px;
+    z-index: 5000; /* Por encima de todo */
+    background: transparent;
+    color: var(--color-danger-glow);
+    border: 2px solid var(--color-danger-glow);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
     font-weight: 700;
+    transition: var(--transition-fast);
 }
-.loader-idea {
-    margin-top: 9px;
-    font-size: 1em;
-    color: #5f5f5f;
-    font-style: italic;
-    letter-spacing: 1px;
+.logout-btn:hover {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-danger);
 }
 
+
+/* --- MEJORA 2: JUEGO DE MEMORIA (CON GIRO 3D) --- */
+.memory-grid {
+    display: grid;
+    /* La clave del responsive: crea tantas columnas como quepan, 
+       con un tamaño mínimo de 90px por carta. */
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 15px; /* Un poco menos de espacio entre cartas */
+    perspective: 1000px;
+    max-width: 700px; /* Un ancho máximo para que no se estire demasiado en pantallas grandes */
+    margin: 0 auto;    /* Centra la grilla en el modal */
+}
+
+.memory-game {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Ajusta el minmax según el tamaño deseado */
+    gap: 10px;
+    width: 90%; /* O un valor que se ajuste a tu diseño */
+    max-width: 600px; /* O el ancho máximo que desees */
+    margin: 20px auto; /* Centrar el juego */
+}
+
+.memory-card {
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* Mantiene la proporción 1:1 */
+    position: relative;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transform: scale(1);
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.memory-card img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain; /* Asegura que la imagen quepa dentro */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.memory-card.flipped {
+    transform: rotateY(180deg); /* La animación de giro */
+}
+.memory-card .card-face {
+    position: absolute; /* Se superponen en el mismo lugar */
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Para navegadores antiguos */
+    backface-visibility: hidden; /* ¡ESTA ES LA CLAVE! Oculta una cara cuando está de espaldas a nosotros */
+
+    /* Estilos para centrar el contenido (el '?' y el emoji) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Tomamos prestados estilos de otras partes de tu web para que se vea consistente */
+    border-radius: 10px;
+    border: 2px solid var(--color-primary-glow);
+    font-size: 3.5em; /* Un buen tamaño para el emoji */
+    box-shadow: inset 0 0 10px rgba(0, 245, 200, 0.5);
+}
+
+.card-front {
+    background: rgba(0, 245, 200, 0.1);
+    color: var(--color-primary-glow);
+}
+.card-back {
+    background: rgba(169, 85, 255, 0.2);
+    border-color: var(--color-secondary-glow);
+    transform: rotateY(180deg); /* La cara de atrás empieza girada */
+}
+.memory-card.matched .card-face {
+    border-color: var(--color-success-glow);
+    box-shadow: var(--shadow-glow-success);
+}
+
+
+/* --- MEJORA 3: JUEGO DE CRUCIGRAMA (GRILLA FUTURISTA) --- */
+.crucigrama-container {
+    display: flex;
+    gap: 40px;
+}
+.crucigrama-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 40px); /* Ajustar el 12 al tamaño del crucigrama */
+    grid-template-rows: repeat(12, 40px);
+    gap: 2px;
+}
+.crucigrama-cell {
+    width: 40px;
+    height: 40px;
+    background: rgba(0,0,0,0.2);
+    position: relative;
+}
+.crucigrama-cell.active {
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary-glow);
+}
+.crucigrama-cell input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    text-align: center;
+    font-size: 1.5em;
+    text-transform: uppercase;
+    caret-color: var(--color-primary-glow);
+}
+.crucigrama-cell .number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 0.7em;
+    color: var(--color-primary-glow);
+}
+.clues {
+    font-family: 'Courier New', Courier, monospace;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--color-secondary-glow);
+    flex-grow: 1;
+}
+.clues h4 {
+    color: var(--color-secondary-glow);
+    margin-bottom: 10px;
+}
+
+
+/* --- MEJORA 4: JUEGO DE CLASIFICACIÓN (CHIPS DE DATOS) --- */
+.animals-to-classify {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    margin-bottom: 30px;
+    justify-content: center;
+}
+.draggable-animal {
+    padding: 10px 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary-glow);
+    border-radius: 8px;
+    cursor: grab;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.draggable-animal:hover {
+    background: var(--color-primary-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-primary);
+}
+.draggable-animal.dragging {
+    opacity: 0.5;
+    transform: scale(0.9);
+}
+.classification-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+.drop-zone {
+    min-height: 150px;
+    padding: 15px;
+    background: rgba(169, 85, 255, 0.05);
+    border: 2px dashed var(--color-secondary-glow);
+    border-radius: 10px;
+    transition: var(--transition-fast);
+}
+.drop-zone.drag-over {
+    background: rgba(169, 85, 255, 0.2);
+    border-style: solid;
+    box-shadow: var(--shadow-glow-secondary);
+}
+.drop-zone h4 {
+    text-align: center;
+    color: var(--color-secondary-glow);
+    margin-bottom: 15px;
+}
+
+
+/* --- MEJORA 5: BOTONES GLOBALES DEL PANEL DE ADMIN --- */
+#globalManagement {
+    margin-top: 40px;
+    padding: 30px;
+    border: 1px solid var(--color-primary-glow);
+    border-radius: 10px;
+    background: rgba(0, 245, 200, 0.05);
+}
+#globalManagement h3 {
+    text-align: center;
+    font-size: 1.8em;
+    margin-bottom: 25px;
+    color: var(--color-primary-glow);
+}
+.global-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+}
+.global-controls input {
+    width: 120px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--color-primary-glow);
+    background: rgba(0, 245, 200, 0.1);
+    color: #fff;
+    text-align: center;
+}
+.global-controls .btn {
+    width: auto;
+    flex-grow: 1;
+}
+
+
+/* --- MEJORA 6: RESPONSIVIDAD PARA LOS NUEVOS ESTILOS --- */
+@media (max-width: 900px) {
+    .crucigrama-container {
+        flex-direction: column;
+    }
+    .crucigrama-grid {
+        grid-template-columns: repeat(12, 30px);
+        grid-template-rows: repeat(12, 30px);
+    }
+    .crucigrama-cell {
+        width: 30px;
+        height: 30px;
+    }
+}
 @media (max-width: 600px) {
-    .loader-content {
-        padding: 0 20px;
+    .memory-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
-    .loader-authors {
-        font-size: 1em;
-        padding: 13px 10vw 13px 10vw;
+    .crucigrama-grid {
+        grid-template-columns: repeat(12, 24px);
+        grid-template-rows: repeat(12, 24px);
+        gap: 1px;
     }
-    .loader-bar {
-        width: 90vw;
-        max-width: 98vw;
-        height: 11px;
-    }
-    .loader-logo {
-        font-size: 2.2rem;
-    }
-    .loader-text {
-        font-size: 1.12em;
+    .crucigrama-cell {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8em;
     }
 }
 
-.user-info-bar {
-    background: linear-gradient(90deg, #899ff7 0%, #8d82c7 100%);
+#globalManagement {
+    margin-top: 40px;
+    padding: 30px;
+    border: 1px solid var(--color-primary-glow);
+    border-radius: 10px;
+    background: rgba(0, 245, 200, 0.05);
+}
+
+#globalManagement h3 {
+    text-align: center;
+    font-size: 1.8em;
+    margin-bottom: 25px;
+    color: var(--color-primary-glow);
+    font-family: var(--font-display);
+}
+
+.global-controls {
+    display: grid; /* Usamos grid para un mejor control */
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+}
+
+/* El input de cantidad también se mejora */
+.global-controls input#globalCoins {
+    width: 100%;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--color-primary-glow);
+    background: rgba(0, 245, 200, 0.1);
     color: #fff;
-    border-radius: 13px;
-    padding: 19px 28px;
-    margin-bottom: 17px;
-    display: flex;
-    align-items: center;
-    font-size: 1.25em;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    min-height: 50px;
-    box-shadow: 0 2px 12px 0 #8d82c71b;
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: opacity .7s, transform .7s;
-}
-.fila-badge-bar {
-    margin-left: 15px;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: #fff;
-    padding: 6px 20px;
-    border-radius: 18px;
-    font-size: 1em;
-    font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 5px 0 #8883;
-}
-.bienvenida-label { font-size: 1.1em; }
-.games-section { opacity: 0; transform: translateY(30px); transition: opacity .9s, transform .9s; }
-.fadein-show { opacity: 1 !important; transform: translateY(0) !important; }
-.section-title {
-    margin: 30px 0 16px 0;
-    color: #764ba2;
-    font-size: 1.35em;
-    letter-spacing: 1px;
-    font-weight: bold;
-}
-
-.section-title-bar {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    background: linear-gradient(90deg, #f8fafc 60%, #c9e2ff 100%);
-    color: #4d2ba0;
-    border-radius: 18px;
-    padding: 12px 24px;
-    margin: 40px 0 20px 0;
-    font-size: 1.6em;
-    font-weight: bold;
-    box-shadow: 0 4px 17px 0 #bdbdbd25;
-    letter-spacing: 1px;
-    transition: background 0.5s;
-}
-.section-title-bar .section-title-icon {
-    font-size: 1.4em;
-    margin-right: 6px;
-    filter: drop-shadow(0 2px 8px #bdbdbd50);
-}
-.section-title-bar.special {
-    background: linear-gradient(90deg, #fffbe9 60%, #ffe5c7 100%);
-    color: #c97c00;
-}
-.section-title-bar.special .section-title-icon {
-    filter: drop-shadow(0 2px 8px #ffecb380);
-}
-.section-title-text {
-    font-family: 'Montserrat', Arial, sans-serif;
-    font-weight: 900;
-    letter-spacing: 2px;
-    font-size: 1.16em;
-}
-
-.minecoins-bar {
-    display: flex;
-    align-items: center;
-    background: linear-gradient(90deg, #fffbe9 0%, #fcf2ff 100%);
-    border-radius: 17px;
-    padding: 8px 16px;
-    margin: 0 auto 28px auto;
-    box-shadow: 0 3px 14px 0 #3331;
-    width: fit-content;
-    gap: 17px;
-    font-family: 'Montserrat', Arial, sans-serif;
-    font-size: 1.15em;
-    font-weight: bold;
-    color: #764ba2;
-    transition: background 0.6s;
-}
-.mine-b-symbol {
-    font-size: 2em;
-    color: gold;
-    text-shadow: 0 2px 8px #e5c24190;
-    margin-right: 10px;
-}
-.minecoins-amount {
-    font-size: 1.57em;
-    font-weight: 900;
-    color: #667eea;
-    margin-right: 7px;
-    letter-spacing: 1px;
-}
-.mine-b-label {
-    font-size: 1em;
-    color: #764ba2;
-    letter-spacing: 1px;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 1.2em;
     font-weight: 700;
-    margin-left: 4px;
+    grid-column: 1 / -1; /* Ocupa todo el ancho en la primera fila */
+    margin-bottom: 10px;
+}
+.global-controls input#globalCoins:focus {
+    outline: none;
+    box-shadow: var(--shadow-glow-primary);
 }
 
-.user-info-bar {
-    background: linear-gradient(90deg, #899ff7 0%, #8d82c7 100%);
-    color: #fff;
-    border-radius: 13px;
-    padding: 19px 28px;
-    margin-bottom: 17px;
-    display: flex;
-    align-items: center;
-    font-size: 1.25em;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    min-height: 50px;
-    box-shadow: 0 2px 12px 0 #8d82c71b;
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: opacity .7s, transform .7s;
+
+/* Estilo base para los botones globales */
+.global-controls .btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 1.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 2px solid;
+    background: transparent;
+    transition: all var(--transition-fast);
 }
-.fila-badge-bar {
-    margin-left: 15px;
-    background: linear-gradient(45deg, #667eea, #764ba2);
+
+/* Botón de DAR A TODAS */
+.global-controls .btn-success {
+    border-color: var(--color-success-glow);
+    color: var(--color-success-glow);
+    text-shadow: 0 0 5px var(--color-success-glow);
+}
+.global-controls .btn-success:hover {
+    background: var(--color-success-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-success);
+    transform: scale(1.05);
+}
+
+/* Botón de QUITAR A TODAS */
+.global-controls .btn-danger {
+    border-color: var(--color-danger-glow);
+    color: var(--color-danger-glow);
+    text-shadow: 0 0 5px var(--color-danger-glow);
+}
+.global-controls .btn-danger:hover {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-danger);
+    transform: scale(1.05);
+}
+
+/* Responsividad para la nueva grilla de botones */
+@media (max-width: 600px) {
+    .global-controls {
+        grid-template-columns: 1fr; /* Una columna en móviles */
+    }
+}
+
+.memory-game {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Ajusta el minmax según el tamaño deseado */
+    gap: 10px;
+    width: 90%; /* O un valor que se ajuste a tu diseño */
+    max-width: 600px; /* O el ancho máximo que desees */
+    margin: 20px auto; /* Centrar el juego */
+}
+
+.crossword-controls button {
+    background-color: #007bff; /* Un color llamativo */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.crossword-controls button:hover {
+    background-color: #0056b3;
+}
+
+.crossword-grid input {
+    width: 30px; /* Ajusta el tamaño según sea necesario */
+    height: 30px;
+    text-align: center;
+    font-size: 20px;
+    border: 1px solid #ccc;
+    margin: 2px;
+    text-transform: uppercase; /* Opcional: para mostrar las letras en mayúscula */
+}
+
+.crossword-clues li {
+    font-size: 14px; /* Reduce el tamaño del texto de las pistas */
+    padding: 8px;
+    border: 1px solid #eee;
+    margin-bottom: 5px;
+    overflow-wrap: break-word; /* Evita que el texto largo se salga */
+}
+
+.ranking-controls button {
+    background-color: #28a745; /* Otro color para diferenciar */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin-top: 10px; /* Espacio superior */
+}
+
+.ranking-controls button:hover {
+    background-color: #1e7e34;
+}
+
+/* ====================================================== */
+/* --- CORRECCIONES DE ESTILO Y BUGS VISUALES --- */
+/* ====================================================== */
+
+/* --- 1. SOLUCIÓN PARA JUEGO DE MEMORIA --- */
+
+/* Hacemos que la "cara trasera" de la carta sea visible en la animación de giro */
+.memory-card .card-back {
+    transform: rotateY(180deg);
+    background: rgba(169, 85, 255, 0.2); /* Un color de fondo diferente para el dorso */
+    border-color: var(--color-secondary-glow);
+}
+
+.memory-card .card-front {
+    background: rgba(0, 245, 200, 0.1);
+    color: var(--color-primary-glow);
+}
+
+/* --- 2. SOLUCIÓN PARA BOTONES DE VERIFICAR --- */
+
+/* Estilo base para los botones de verificar en los juegos */
+#checkClasificacionBtn, #checkCrucigramaBtn {
+    display: block;
+    width: 50%;
+    margin: 30px auto 0; /* Centrado y con margen superior */
+    padding: 15px;
+    background: transparent;
+    border: 2px solid var(--color-primary-glow);
+    color: var(--color-primary-glow);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 1.2em;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition: var(--transition-fast);
+}
+
+#checkClasificacionBtn:hover, #checkCrucigramaBtn:hover {
+    background: var(--color-primary-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-primary);
+    transform: scale(1.05);
+}
+
+
+/* --- 3. SOLUCIÓN PARA CRUCIGRAMA --- */
+
+/* Estilo para los cuadrados donde se escribe */
+/* (Se aplica a la versión del juego que SÍ está en tu script.js) */
+.crucigrama-inputs input {
+    width: 100%; /* Ocupa el espacio disponible */
+    padding: 10px;
+    margin-bottom: 10px; /* Espacio entre cada palabra */
+    background: rgba(0, 245, 200, 0.1);
+    border: 1px solid var(--color-primary-glow);
+    border-radius: 8px;
     color: #fff;
-    padding: 6px 20px;
-    border-radius: 18px;
+    font-size: 1.2em;
+    text-align: center;
+    text-transform: uppercase;
+    caret-color: var(--color-primary-glow);
+}
+
+.crucigrama-inputs input:focus {
+    outline: none;
+    box-shadow: var(--shadow-glow-primary);
+    background: rgba(0, 245, 200, 0.2);
+}
+
+/* Estilo para el contenedor de pistas */
+.clues {
+    font-family: 'Courier New', Courier, monospace;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--color-secondary-glow);
+    flex-grow: 1;
+}
+
+/* Corregimos el texto de las pistas para que no se salga */
+.clues ol {
+    padding-left: 20px; /* Añadimos un poco de espacio para los números */
+}
+
+.clues li {
+    font-size: 0.9em; /* Reducimos el tamaño de la letra */
+    margin-bottom: 15px; /* Más espacio entre pistas */
+    line-height: 1.4;
+    color: #ccc;
+}
+
+.btn-restart {
+    border-color: var(--color-primary-glow);
+    color: var(--color-primary-glow);
+    background: transparent;
+    padding: 15px 30px;
+    font-family: var(--font-display);
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-restart:hover {
+    background: var(--color-primary-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-primary);
+    transform: scale(1.05);
+}
+
+.btn-close-results {
+    border-color: var(--color-danger-glow);
+    color: var(--color-danger-glow);
+    background: transparent;
+    padding: 15px 30px;
+    font-family: var(--font-display);
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-close-results:hover {
+    background: var(--color-danger-glow);
+    color: var(--color-background);
+    box-shadow: var(--shadow-glow-danger);
+    transform: scale(1.05);
+}
+
+/* ====================================================== */
+/* --- ESTILOS PARA PANEL DE PROFESORA MEJORADO --- */
+/* ====================================================== */
+
+/* Contenedor para las acciones de juegos y penalizaciones */
+.teacher-actions-grid {
+    grid-column: 1 / -1; /* Ocupa todo el ancho */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+    border-top: 1px solid rgba(169, 85, 255, 0.2);
+    padding-top: 20px;
+}
+
+/* Estilos para las cajas de acción */
+.completed-games-list, .penalty-controls {
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.completed-games-list h5, .penalty-controls h5 {
+    margin: 0 0 10px 0;
+    color: var(--color-secondary-glow);
     font-size: 1em;
-    font-weight: bold;
-    letter-spacing: 1px;
-    box-shadow: 0 2px 5px 0 #8883;
 }
-.bienvenida-label { font-size: 1.1em; }
-.games-section { opacity: 0; transform: translateY(30px); transition: opacity .9s, transform .9s; }
-.fadein-show { opacity: 1 !important; transform: translateY(0) !important; }
-.section-title {
-    margin: 30px 0 16px 0;
-    color: #764ba2;
-    font-size: 1.35em;
-    letter-spacing: 1px;
-    font-weight: bold;
+
+.penalty-controls small {
+    display: block;
+    margin-top: 10px;
+    color: #ccc;
+    font-size: 0.8em;
 }
-@media (max-width: 650px) {
-    .section-title-bar,
-    .section-title-bar.special {
-        font-size: 1.15em;
-        padding: 10px 10vw;
+
+/* Estilo base para todos los botones pequeños de acción */
+.btn-teacher {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+    background: transparent;
+    transition: var(--transition-fast);
+    text-transform: uppercase;
+}
+
+.btn-teacher:hover {
+    color: var(--color-background);
+    transform: scale(1.05);
+}
+
+/* Botón RESET (Amarillo/Advertencia) */
+.btn-reset-game {
+    border-color: var(--color-warning-glow);
+    color: var(--color-warning-glow);
+}
+.btn-reset-game:hover {
+    background-color: var(--color-warning-glow);
+    box-shadow: 0 0 10px var(--color-warning-glow);
+}
+
+/* Botón PENALIZAR (Rojo/Peligro) */
+.btn-penalize {
+    border-color: var(--color-danger-glow);
+    color: var(--color-danger-glow);
+}
+.btn-penalize:hover {
+    background-color: var(--color-danger-glow);
+    box-shadow: var(--shadow-glow-danger);
+}
+
+/* Botón QUITAR CASTIGO (Verde/Éxito) */
+.btn-remove-penalty {
+    border-color: var(--color-success-glow);
+    color: var(--color-success-glow);
+}
+.btn-remove-penalty:hover {
+    background-color: var(--color-success-glow);
+    box-shadow: var(--shadow-glow-success);
+}
+
+/* Responsividad para la nueva grilla */
+@media (max-width: 768px) {
+    .teacher-actions-grid {
+        grid-template-columns: 1fr;
     }
-    .minecoins-bar {
-        font-size: 1em;
-        padding: 9px 11vw;
-    }
 }
-.fadein { opacity: 0; transform: translateY(18px); transition: opacity 0.7s, transform 0.7s; }
