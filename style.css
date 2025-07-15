@@ -585,9 +585,6 @@ body::before {
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     border-left: 5px solid var(--color-primary-glow);
     transition: var(--transition-fast);
 }
@@ -1466,7 +1463,7 @@ body::before {
 #notification-container {
     position: fixed;
     top: 20px;
-    left: 20px; /* Cambiado de 'right' a 'left' */
+    right: 20px;
     z-index: 10001; /* Por encima de todo, incluso de los modales */
     display: flex;
     flex-direction: column;
@@ -1482,7 +1479,7 @@ body::before {
     border-left: 5px solid;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     opacity: 0;
-    transform: translateX(-100%); /* Cambiado de 100% a -100% */
+    transform: translateX(100%);
     transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
@@ -1493,7 +1490,7 @@ body::before {
 
 .notification-toast.hide {
     opacity: 0;
-    transform: translateX(-100%); /* Cambiado de 100% a -100% */
+    transform: translateX(100%);
 }
 
 .notification-toast .toast-title {
@@ -1530,6 +1527,81 @@ body::before {
     #notification-container {
         width: 90%;
         left: 5%;
-        right: auto; /* Se quita el 'right' para que no haya conflicto */
+        right: 5%;
     }
+}
+
+/* --- ESTILOS PARA GESTIÓN DE JUEGOS DISPONIBLES (NUEVO) --- */
+.teacher-panel-section {
+    background: rgba(13, 12, 29, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(169, 85, 255, 0.3);
+}
+
+.game-availability-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid rgba(169, 85, 255, 0.1);
+    font-family: var(--font-body);
+}
+
+.game-availability-row:last-child {
+    border-bottom: none;
+}
+
+.game-availability-row span {
+    font-size: 1.1em;
+    color: #e0e0e0;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-danger-glow);
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-success-glow);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--color-success-glow);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }

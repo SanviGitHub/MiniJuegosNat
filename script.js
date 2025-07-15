@@ -388,12 +388,15 @@ async function handleLogin() {
         await loadTeacherPanel();
     } else {
         listenToUserData(username);
+        // NUEVA LLAMADA PARA CARGAR JUEGOS DINÁMICAMENTE
+        listenAndRenderAvailableGames();
     }
 }
 
 function handleLogout() {
     if (appState.unsubscribeSnapshot) appState.unsubscribeSnapshot();
     if (appState.unsubscribeNotifications) appState.unsubscribeNotifications();
+    if (appState.unsubscribeGames) appState.unsubscribeGames();
     
     appState = {
         currentUser: null,
@@ -427,6 +430,8 @@ function checkSession() {
             loadTeacherPanel();
         } else {
             listenToUserData(user);
+            // NUEVA LLAMADA PARA CARGAR JUEGOS DINÁMICAMENTE
+            listenAndRenderAvailableGames();
         }
     } else {
         DOMElements.loadingScreen.style.display = 'none';
@@ -945,7 +950,52 @@ async function loadTeacherPanel() {
                 </div>
             </div>`;
     }).join('');
+    await renderGameAvailabilityPanel();
 }
+
+// --- NUEVA FUNCIÓN AÑADIDA AL SCRIPT ---
+async function renderGameAvailabilityPanel() {
+    const container = document.getElementById('gameAvailabilityManagement');
+    if (!container) return;
+
+    const gameAvailabilityRef = doc(db, "settings", "gameAvailability");
+    const docSnap = await getDoc(gameAvailabilityRef);
+    const availabilityData = docSnap.exists() ? docSnap.data() : {};
+
+    // Unir todos los juegos en una sola lista para facilitar la iteración
+    const allGames = [...GAME_LIST.quizzes, ...GAME_LIST.geologia, ...GAME_LIST.special];
+
+    container.innerHTML = allGames.map(game => {
+        const isEnabled = availabilityData[game.id] !== false; // Un juego está habilitado por defecto
+        return `
+            <div class="game-availability-row">
+                <span>${game.icon} ${game.title}</span>
+                <label class="switch">
+                    <input type="checkbox" data-game-id="${game.id}" ${isEnabled ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        `;
+    }).join('');
+
+    // Añadir event listeners a los switches
+    container.querySelectorAll('.switch input').forEach(toggle => {
+        toggle.addEventListener('change', async (e) => {
+            const gameId = e.target.dataset.gameId;
+            const isEnabled = e.target.checked;
+            
+            try {
+                await setDoc(gameAvailabilityRef, { [gameId]: isEnabled }, { merge: true });
+                // Notificación opcional para la profesora
+                showNotification(`'${gameId}' ha sido ${isEnabled ? 'habilitado' : 'deshabilitado'}.`, 'info');
+            } catch (error) {
+                console.error("Error al actualizar la disponibilidad del juego:", error);
+                showNotification('Error al guardar el cambio.', 'danger');
+            }
+        });
+    });
+}
+
 // --- FUNCIONES DE UTILIDAD ---
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -1036,21 +1086,20 @@ function listenToUserData(fila) {
         limit(10)
     );
 
-    appState.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            // Solo reaccionar a notificaciones nuevas que no hayamos mostrado ya
-            if (change.type === "added" && !appState.shownNotificationIds.has(change.doc.id)) {
-                const notification = change.doc.data();
-                const now = Date.now();
-                // Solo mostrar si la notificación es reciente (ej: últimos 60 seg)
-                // para no bombardear al usuario con notificaciones viejas al iniciar sesión.
-                if (notification.timestamp && (now - notification.timestamp.toMillis()) < 60000) {
-                    showNotification(notification.message, notification.type);
-                }
-                appState.shownNotificationIds.add(change.doc.id);
-            }
-        });
+appState.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+        // Solo reaccionar a notificaciones nuevas que no hayamos mostrado ya
+        if (change.type === "added" && !appState.shownNotificationIds.has(change.doc.id)) {
+            const notification = change.doc.data();
+            
+            // SE HA ELIMINADO LA CONDICIÓN DE TIEMPO DE 60 SEGUNDOS
+            // para que cualquier notificación nueva desde que se inició la escucha, aparezca.
+            showNotification(notification.message, notification.type);
+            
+            appState.shownNotificationIds.add(change.doc.id);
+        }
     });
+});
 }
 
 
@@ -1097,3 +1146,44 @@ async function showLeaderboard() {
         leaderboardContent.innerHTML = '<p style="text-align:center; color: var(--color-danger-glow);">No se pudieron cargar los puntajes.</p>';
     }
 }
+// --- NUEVA FUNCIÓN AÑADIDA AL SCRIPT ---
+
+// Almacena el listener para poder cerrarlo al hacer logout
+appState.unsubscribeGames = null;
+
+async function listenAndRenderAvailableGames() {
+    const gameAvailabilityRef = doc(db, "settings", "gameAvailability");
+
+    // Si ya hay un listener, lo cerramos para evitar duplicados
+    if (appState.unsubscribeGames) {
+        appState.unsubscribeGames();
+    }
+
+    appState.unsubscribeGames = onSnapshot(gameAvailabilityRef, (docSnap) => {
+        const availableGames = docSnap.exists() ? docSnap.data() : {};
+
+        // Filtrar cada categoría de juegos
+        const filteredQuizzes = GAME_LIST.quizzes.filter(game => availableGames[game.id] !== false); // true o undefined
+        const filteredGeologia = GAME_LIST.geologia.filter(game => availableGames[game.id] !== false);
+        const filteredSpecial = GAME_LIST.special.filter(game => availableGames[game.id] !== false);
+
+        // Renderizar solo los juegos filtrados
+        const quizHTML = filteredQuizzes.length > 0 ? createSection('Quizzes de Ciencias Naturales', '📝', filteredQuizzes) : '';
+        const geologiaHTML = filteredGeologia.length > 0 ? createSection('Quizzes de Geología', '🌋', filteredGeologia) : '';
+        const specialHTML = filteredSpecial.length > 0 ? createSection('Juegos Especiales', '⭐', filteredSpecial, true) : '';
+
+        DOMElements.gamesContainer.innerHTML = quizHTML + geologiaHTML + specialHTML;
+    });
+}
+
+// Helper function para crear las secciones de juegos (ya existía una parecida, la refactorizamos)
+function createSection(title, icon, games, isSpecial = false) {
+    return `
+        <div class="section-title-bar ${isSpecial ? 'special' : ''}">
+            <span class="section-title-icon">${icon}</span>
+            <span class="section-title-text">${title}</span>
+        </div>
+        <div class="games-grid">${games.map(createGameCardHTML).join('')}</div>`;
+}
+
+// No es necesario modificar renderAllGameCards, ya que ahora usamos listenAndRenderAvailableGames
