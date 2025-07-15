@@ -1,31 +1,8 @@
-// script.js (Versión Completa y Unificada)
+// script.js (Versión con Notificaciones en Tiempo Real)
 
 // --- 1. CONFIGURACIÓN Y MÓDULOS DE FIREBASE ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, getDocs, collection, deleteField } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-// --- DETECTORES DE TRAMPAS (Versión Reforzada) ---
-
-// Función para registrar la penalización una sola vez por evento
-const handleCheating = () => {
-    // Si hay un juego abierto y el usuario no está ya penalizado...
-    if (appState.currentGameId && (!appState.penaltyUntil || appState.penaltyUntil < Date.now())) {
-        console.log('¡Trampa detectada! Activando penalización...'); // Para depuración
-        triggerCheatPenalty();
-    }
-};
-
-// Detector 1: Cambio de pestaña o ventana
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { // Si la pestaña deja de estar visible
-        handleCheating();
-    }
-});
-
-// Detector 2: Copiar texto
-document.addEventListener('copy', () => {
-    handleCheating();
-});
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, getDocs, collection, deleteField, addDoc, query, where, orderBy, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB4gsmP4npxwgHRN0882sqG-ruZj1DL0V0",
@@ -60,8 +37,9 @@ const GAME_LIST = {
         { id: 'universo', icon: '🌌', title: 'Quiz del Universo', desc: 'Sistema solar y el espacio.', reward: 10 },
         { id: 'materia', icon: '🔬', title: 'Quiz de la Materia', desc: 'Estados y cambios de la materia.', reward: 10 },
         { id: 'tecnologia', icon: '💻', title: 'Quiz de Tecnología', desc: 'Inventos, aparatos y ciencia aplicada.', reward: 10 },
+        { id: 'reyLeon', icon: '🦁', title: 'Quiz de El Rey León', desc: 'La biología y los ecosistemas de la sabana.', reward: 10 },
     ],
-    geologia: [ // NUEVA SECCIÓN DE GEOLOGÍA
+    geologia: [
         { id: 'capasTierra', icon: '🌎', title: 'Quiz de Capas de la Tierra', desc: 'Conoce la estructura interna de nuestro planeta.', reward: 10 },
         { id: 'volcanes', icon: '🌋', title: 'Quiz de Volcanes y Terremotos', desc: 'Las fuerzas internas de la Tierra.', reward: 10 },
         { id: 'rocasMinerales', icon: '💎', title: 'Quiz de Rocas y Minerales', desc: 'Descubre los componentes de la corteza.', reward: 10 },
@@ -90,13 +68,23 @@ const gameQuestions = {
     universo: [{ question: "¿Cuál es el planeta más cercano al Sol?", options: ["Mercurio", "Venus", "Tierra", "Marte"], correct: 0 }, { question: "¿Qué estrella está más cerca de la Tierra?", options: ["El Sol", "Sirio", "Proxima Centauri", "Betelgeuse"], correct: 0 }, { question: "¿Cuántos planetas hay en el sistema solar?", options: ["8", "7", "9", "10"], correct: 0 }, { question: "¿Qué planeta es conocido como el planeta rojo?", options: ["Marte", "Venus", "Júpiter", "Saturno"], correct: 0 }, { question: "¿Cómo se llama la galaxia donde vivimos?", options: ["Vía Láctea", "Andrómeda", "Magallanes", "Centauro"], correct: 0 }, { question: "¿Qué planeta tiene anillos visibles?", options: ["Saturno", "Tierra", "Marte", "Venus"], correct: 0 }, { question: "¿Cuál es el satélite natural de la Tierra?", options: ["La Luna", "El Sol", "Marte", "Júpiter"], correct: 0 }, { question: "¿Qué astro da luz y calor a la Tierra?", options: ["El Sol", "La Luna", "Marte", "Venus"], correct: 0 }, { question: "¿Cuánto tarda la Tierra en dar la vuelta al Sol?", options: ["1 año", "1 mes", "1 semana", "1 día"], correct: 0 }, { question: "¿Qué planeta es el más grande?", options: ["Júpiter", "Tierra", "Venus", "Saturno"], correct: 0 }],
     materia: [{ question: "¿En cuántos estados se presenta la materia?", options: ["3", "2", "4", "5"], correct: 0 }, { question: "¿Cuál NO es un estado de la materia?", options: ["Plástico", "Sólido", "Líquido", "Gaseoso"], correct: 0 }, { question: "¿Qué estado tiene forma y volumen definidos?", options: ["Sólido", "Líquido", "Gas", "Plasma"], correct: 0 }, { question: "¿Qué cambio ocurre al derretir hielo?", options: ["Fusión", "Evaporación", "Sublimación", "Condensación"], correct: 0 }, { question: "¿Qué es una mezcla?", options: ["Combinación de sustancias", "Elemento puro", "Gas", "Átomo"], correct: 0 }, { question: "¿Qué es un átomo?", options: ["Partícula mínima", "Molécula", "Elemento", "Mezcla"], correct: 0 }, { question: "¿Qué es un compuesto?", options: ["Dos o más elementos", "Un solo elemento", "Gas", "Sólido"], correct: 0 }, { question: "¿Qué es evaporación?", options: ["Líquido a gas", "Sólido a gas", "Gas a líquido", "Sólido a líquido"], correct: 0 }, { question: "¿Qué es condensación?", options: ["Gas a líquido", "Líquido a gas", "Sólido a líquido", "Líquido a sólido"], correct: 0 }, { question: "¿Qué es una solución?", options: ["Mezcla homogénea", "Mezcla heterogénea", "Elemento", "Compuesto"], correct: 0 }],
     tecnologia: [{ question: "¿Qué invento permite hablar a distancia?", options: ["Teléfono", "Televisor", "Radio", "Computadora"], correct: 0 }, { question: "¿Qué aparato sirve para calcular?", options: ["Calculadora", "Lámpara", "Ratón", "Reloj"], correct: 0 }, { question: "¿Qué aparato proyecta imágenes?", options: ["Proyector", "Ventilador", "Balanza", "Licuadora"], correct: 0 }, { question: "¿Qué invento revolucionó la escritura?", options: ["Imprenta", "Lámpara", "Bicicleta", "Reloj"], correct: 0 }, { question: "¿Qué aparato graba sonidos?", options: ["Grabadora", "Televisor", "Termómetro", "Bicicleta"], correct: 0 }, { question: "¿Qué aparato mide la temperatura?", options: ["Termómetro", "Barómetro", "Microscopio", "Lupa"], correct: 0 }, { question: "¿Qué aparato permite ver cosas pequeñas?", options: ["Microscopio", "Televisor", "Reloj", "Imán"], correct: 0 }, { question: "¿Qué aparato sirve para escribir en la computadora?", options: ["Teclado", "Pantalla", "Bocina", "Mouse"], correct: 0 }, { question: "¿Qué invento permitió volar?", options: ["Avión", "Auto", "Bicicleta", "Tren"], correct: 0 }, { question: "¿Qué invento sirve para iluminar de noche?", options: ["Lámpara", "Teléfono", "Reloj", "Rueda"], correct: 0 }],
-    // NUEVAS PREGUNTAS DE GEOLOGÍA
     capasTierra: [{ question: "¿Cuál es la capa más externa de la Tierra?", options: ["Corteza", "Manto", "Núcleo", "Atmósfera"], correct: 0 }, { question: "¿Qué capa de la Tierra es líquida y está hecha principalmente de hierro y níquel?", options: ["Núcleo externo", "Núcleo interno", "Manto", "Corteza"], correct: 0 }, { question: "¿Cómo se llama la capa intermedia entre la corteza y el núcleo?", options: ["Manto", "Litosfera", "Astenosfera", "Mesosfera"], correct: 0 }, { question: "La corteza terrestre se divide en dos tipos: continental y...", options: ["Oceánica", "Volcánica", "Sedimentaria", "Ígnea"], correct: 0 }, { question: "¿Cuál es la capa más caliente de la Tierra?", options: ["Núcleo interno", "Núcleo externo", "Manto", "Corteza"], correct: 0 }, { question: "¿Sobre qué capa 'flotan' las placas tectónicas?", options: ["Astenosfera", "Litosfera", "Corteza", "Núcleo"], correct: 0 }, { question: "¿Qué capa forma el campo magnético de la Tierra?", options: ["Núcleo externo", "Corteza", "Manto superior", "Atmósfera"], correct: 1 }, { question: "El núcleo interno de la Tierra es...", options: ["Sólido", "Líquido", "Gaseoso", "Plasma"], correct: 0 }, { question: "La litosfera está compuesta por la corteza y la parte superior del...", options: ["Manto", "Núcleo", "Río", "Océano"], correct: 0 }, { question: "La mayor parte del volumen de la Tierra corresponde al...", options: ["Manto", "Núcleo", "Corteza", "Océanos"], correct: 0 }],
     volcanes: [{ question: "¿Qué es el magma?", options: ["Roca fundida bajo la superficie", "Roca fundida en la superficie", "Ceniza volcánica", "Vapor de agua"], correct: 0 }, { question: "Cuando el magma sale a la superficie, se llama...", options: ["Lava", "Roca", "Piedra", "Mineral"], correct: 0 }, { question: "¿Qué teoría explica el movimiento de las grandes piezas de la corteza terrestre?", options: ["Tectónica de placas", "Relatividad", "Evolución", "Gravitación universal"], correct: 0 }, { question: "Un terremoto es causado por la liberación de energía en la...", options: ["Corteza terrestre", "Atmósfera", "Superficie del sol", "Luna"], correct: 0 }, { question: "¿Cómo se llama el punto en la superficie directamente sobre el foco de un terremoto?", options: ["Epicentro", "Hipocentro", "Falla", "Cráter"], correct: 0 }, { question: "¿Cuál de estos es un tipo de volcán conocido por sus erupciones explosivas?", options: ["Estratovolcán", "En escudo", "Cono de ceniza", "Caldera"], correct: 0 }, { question: "La escala de Richter mide la... de un terremoto.", options: ["Magnitud", "Intensidad", "Profundidad", "Duración"], correct: 0 }, { question: "¿Qué es un tsunami?", options: ["Una ola gigante causada por un terremoto submarino", "Un tipo de tornado", "Una tormenta de arena", "Una erupción volcánica"], correct: 0 }, { question: "El 'Cinturón de Fuego' del Pacífico es una zona con mucha actividad...", options: ["Sísmica y volcánica", "De tornados", "De auroras boreales", "Comercial"], correct: 0 }, { question: "¿Qué sale de un volcán además de lava?", options: ["Cenizas y gases", "Solo agua", "Plantas", "Animales"], correct: 0 }],
     rocasMinerales: [{ question: "¿Cuál de estas es una roca ígnea?", options: ["Granito", "Arenisca", "Mármol", "Caliza"], correct: 0 }, { question: "Las rocas formadas por la acumulación de sedimentos se llaman...", options: ["Sedimentarias", "Ígneas", "Metamórficas", "Preciosas"], correct: 1 }, { question: "El mármol es una roca metamórfica que proviene de la...", options: ["Caliza", "Arenisca", "Granito", "Pizarra"], correct: 0 }, { question: "¿Cuál es el mineral más duro según la escala de Mohs?", options: ["Diamante", "Talco", "Cuarzo", "Oro"], correct: 0 }, { question: "Las rocas que se forman por el enfriamiento del magma o lava son las...", options: ["Ígneas", "Sedimentarias", "Metamórficas", "Fósiles"], correct: 0 }, { question: "La sal común (halita) es un tipo de...", options: ["Mineral", "Roca ígnea", "Roca metamórfica", "Metal"], correct: 0 }, { question: "¿Qué tipo de roca es la arenisca?", options: ["Sedimentaria", "Ígnea", "Metamórfica", "Volcánica"], correct: 0 }, { question: "El proceso que transforma una roca en otra por calor y presión se llama...", options: ["Metamorfismo", "Erosión", "Sedimentación", "Fusión"], correct: 0 }, { question: "El cuarzo es un mineral muy común que se encuentra en...", options: ["La arena de la playa", "Las hojas de los árboles", "El agua del mar", "El aire"], correct: 0 }, { question: "¿Qué es la obsidiana?", options: ["Un vidrio volcánico", "Un tipo de metal", "Un fósil", "Una roca sedimentaria"], correct: 0 }],
     fosiles: [{ question: "¿Qué es un fósil?", options: ["Restos o rastros de organismos pasados", "Un tipo de roca brillante", "Una planta viva muy antigua", "Un animal prehistórico vivo"], correct: 0 }, { question: "La mayoría de los fósiles se encuentran en rocas...", options: ["Sedimentarias", "Ígneas", "Metamórficas", "Volcánicas"], correct: 0 }, { question: "¿Cómo se llama el científico que estudia los fósiles?", options: ["Paleontólogo", "Geólogo", "Biólogo", "Arqueólogo"], correct: 0 }, { question: "¿Qué tipo de fósil es una huella de dinosaurio?", options: ["Icnofósil (fósil traza)", "Fósil corporal", "Fósil químico", "Microfósil"], correct: 0 }, { question: "El ámbar es resina de árbol fosilizada que a veces contiene...", options: ["Insectos atrapados", "Oro", "Agua", "Huesos de dinosaurio"], correct: 0 }, { question: "¿Qué nos enseñan los fósiles?", options: ["Sobre la vida en el pasado", "Cómo predecir el futuro", "Sobre los planetas", "La composición del aire"], correct: 0 }, { question: "La fosilización es un proceso que ocurre...", options: ["Muy raramente", "Todos los días", "Solo en los océanos", "Solo en las montañas"], correct: 0 }, { question: "¿Qué parte de un animal tiene más probabilidades de fosilizarse?", options: ["Los huesos", "La piel", "Los músculos", "El cerebro"], correct: 0 }, { question: "¿Cuál es uno de los fósiles más famosos?", options: ["El Tiranosaurio Rex", "La lombriz de tierra", "El mosquito común", "El helecho"], correct: 0 }, { question: "El proceso de convertir materia orgánica en piedra se llama...", options: ["Petrificación", "Evaporación", "Condensación", "Erosión"], correct: 0 }],
+    reyLeon: [
+        { question: "En 'El Círculo de la Vida', la presentación de Simba recién nacido celebra principalmente...", options: ["El ciclo de la vida (nacimiento y crecimiento)", "La capacidad de todos los animales para volar", "La construcción de nidos", "La lucha por el territorio"], correct: 0 },
+        { question: "Cuando Timón y Pumba le enseñan a Simba a comer insectos, lo introducen en una nueva...", options: ["Cadena alimenticia", "Simbiosis", "Metamorfosis", "Hibernación"], correct: 0 },
+        { question: "El cementerio de elefantes, con sus géiseres y falta de vegetación, representa un...", options: ["Ecosistema extremo", "Bosque tropical", "Arrecife de coral", "Pradera templada"], correct: 0 },
+        { question: "¿Qué tipo de consumidores son las hienas cuando comen los restos que dejan otros?", options: ["Carroñeros", "Productores", "Herbívoros", "Descomponedores"], correct: 0 },
+        { question: "La estampida de los ñus, donde todos corren juntos por pánico, es un ejemplo de comportamiento...", options: ["Colectivo o de manada", "Territorial", "De cortejo", "Depredador"], correct: 1 },
+        { question: "La sequía que sufre el reino durante el mandato de Scar demuestra la importancia vital del...", options: ["Agua en un ecosistema", "Fuego para la renovación", "Viento para la polinización", "Sol como fuente de energía"], correct: 0 },
+        { question: "La relación donde Zazú sirve de vigía para Mufasa a cambio de protección es un ejemplo de...", options: ["Simbiosis (mutualismo)", "Parasitismo", "Competencia", "Depredación"], correct: 0 },
+        { question: "El crecimiento de la melena de Simba al convertirse en adulto es un claro ejemplo de...", options: ["Desarrollo y crecimiento", "Camuflaje", "Regeneración", "Mimetismo"], correct: 0 },
+        { question: "Rafiki, al vivir en un árbol baobab y usar sus frutos, muestra cómo un organismo...", options: ["Se adapta a su hábitat", "Migra a otros continentes", "Cambia de color", "Construye presas"], correct: 0 },
+        { question: "La aparición del fantasma de Mufasa que impulsa a Simba a volver es un ejemplo de cómo los seres vivos...", options: ["Responden a estímulos", "Realizan la fotosíntesis", "Se reproducen asexualmente", "Mantienen la homeostasis"], correct: 0 }
+    ]
 };
-
 
 const memoryCards = [
     { id: 1, name: 'León', type: 'Mamífero', emoji: '🦁' }, { id: 2, name: 'Águila', type: 'Ave', emoji: '🦅' },
@@ -183,7 +171,9 @@ let appState = {
     currentGameId: null,
     gameData: {},
     unsubscribeSnapshot: null,
+    unsubscribeNotifications: null,
     penaltyUntil: 0,
+    shownNotificationIds: new Set(),
 };
 
 // --- ELEMENTOS DEL DOM ---
@@ -208,6 +198,16 @@ const DOMElements = {
     closeWarningBtn: document.getElementById('closeWarningBtn'),
     cheatPenaltyScreen: document.getElementById('cheatPenaltyScreen'),
     penaltyTimer: document.getElementById('penaltyTimer'),
+    lockedGameModal: document.getElementById('lockedGameModal'),
+    closeLockedGameBtn: document.getElementById('closeLockedGameBtn'),
+    leaderboardBtns: document.querySelectorAll('#leaderboardBtn'),
+    staffBtns: document.querySelectorAll('#staffBtn'),
+    leaderboardModal: document.getElementById('leaderboardModal'),
+    staffModal: document.getElementById('staffModal'),
+    closeLeaderboardBtn: document.getElementById('closeLeaderboardBtn'),
+    closeStaffBtn: document.getElementById('closeStaffBtn'),
+    leaderboardContent: document.getElementById('leaderboardContent'),
+    notificationContainer: document.getElementById('notification-container'),
 };
 
 // --- INICIALIZACIÓN ---
@@ -215,38 +215,40 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     renderAllGameCards();
     checkSession();
-
-    // Lógica para el loading y la ventana de aviso
-    const loadingScreen = DOMElements.loadingScreen;
-    const warningModal = DOMElements.warningModal;
-
-    setTimeout(() => {
-        loadingScreen.classList.add('fade-out');
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-
-            // Muestra la ventana de aviso si no se ha mostrado antes en esta sesión
-            if (warningModal && !sessionStorage.getItem('warningShown')) {
-                warningModal.style.display = 'block';
-                sessionStorage.setItem('warningShown', 'true'); // Marca como mostrada
-            }
-        }, 500); // Espera a que termine la animación de fade-out
-    }, 1400);
 });
 
+// --- FUNCIÓN DE EVENT LISTENERS ---
 function setupEventListeners() {
-    // Event listeners principales
     DOMElements.loginBtn.addEventListener('click', handleLogin);
     DOMElements.logoutBtn.addEventListener('click', handleLogout);
     DOMElements.closeGameBtn.addEventListener('click', closeGame);
     
+    DOMElements.leaderboardBtns.forEach(btn => btn.addEventListener('click', showLeaderboard));
+    DOMElements.staffBtns.forEach(btn => btn.addEventListener('click', () => {
+        DOMElements.staffModal.style.display = 'block';
+    }));
+
+    if (DOMElements.closeLeaderboardBtn) {
+        DOMElements.closeLeaderboardBtn.addEventListener('click', () => {
+            DOMElements.leaderboardModal.style.display = 'none';
+        });
+    }
+    if (DOMElements.closeStaffBtn) {
+        DOMElements.closeStaffBtn.addEventListener('click', () => {
+            DOMElements.staffModal.style.display = 'none';
+        });
+    }
     if (DOMElements.closeWarningBtn) {
         DOMElements.closeWarningBtn.addEventListener('click', () => {
             DOMElements.warningModal.style.display = 'none';
         });
     }
+    if (DOMElements.closeLockedGameBtn) {
+        DOMElements.closeLockedGameBtn.addEventListener('click', () => {
+            DOMElements.lockedGameModal.style.display = 'none';
+        });
+    }
     
-    // --- DETECTORES DE TRAMPAS (AHORA DENTRO DE LA CONFIGURACIÓN) ---
     const handleCheating = () => {
         if (appState.currentGameId && (!appState.penaltyUntil || appState.penaltyUntil < Date.now())) {
             triggerCheatPenalty();
@@ -256,18 +258,14 @@ function setupEventListeners() {
         if (document.hidden) handleCheating();
     });
     document.addEventListener('copy', handleCheating);
-    // --- FIN DE DETECTORES ---
 
-    // Event listener para las cartas de juego
     DOMElements.gamesContainer.addEventListener('click', (e) => {
         const card = e.target.closest('.game-card');
         if (card && card.dataset.gameId) openGame(card.dataset.gameId);
     });
-    
-    // Event listener para el panel de profesora
+
     DOMElements.teacherPanel.addEventListener('click', handleTeacherPanelClick);
-    
-    // Event listener para botones de resultados (delegación de eventos)
+
     document.addEventListener('click', e => {
         if (e.target.matches('.btn-restart')) {
             const gameId = appState.currentGameId;
@@ -278,11 +276,64 @@ function setupEventListeners() {
                 else if (gameId === 'clasificacion') startClasificacionGame();
             }
         }
-        if (e.target.matches('.btn-close-results')) closeGame();
+        if (e.target.matches('.btn-close-results')) {
+            closeGame();
+        }
     });
 }
 
-// Nueva función para manejar la cuenta regresiva visual
+// --- LÓGICA DE NOTIFICACIONES ---
+
+/**
+ * Muestra una notificación en pantalla.
+ * @param {string} message - El mensaje a mostrar.
+ * @param {string} type - 'info', 'success', o 'danger'.
+ */
+function showNotification(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `notification-toast toast-${type}`;
+    
+    toast.innerHTML = `
+        <div class="toast-title">Aviso del Administrador</div>
+        <div class="toast-message">${message}</div>
+    `;
+
+    DOMElements.notificationContainer.appendChild(toast);
+
+    // Muestra la notificación
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    // Oculta y elimina la notificación después de 5 segundos
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 5000);
+}
+
+/**
+ * Envía una notificación a la base de datos de Firestore.
+ * @param {string} targetFila - La fila de destino o 'global'.
+ * @param {string} message - El mensaje de la notificación.
+ * @param {string} type - El tipo de notificación ('info', 'success', 'danger').
+ */
+async function sendNotification(targetFila, message, type) {
+    try {
+        await addDoc(collection(db, 'notifications'), {
+            targetFila,
+            message,
+            type,
+            timestamp: serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Error al enviar notificación: ", error);
+    }
+}
+
+// --- FIN LÓGICA DE NOTIFICACIONES ---
+
 function startPenaltyCountdown(penaltyEndTime) {
     DOMElements.cheatPenaltyScreen.style.display = 'block';
     
@@ -293,9 +344,10 @@ function startPenaltyCountdown(penaltyEndTime) {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             DOMElements.cheatPenaltyScreen.style.display = 'none';
-            // Opcional: Limpiar el campo en Firebase una vez cumplido
-            const userDocRef = doc(db, "filas", appState.currentUser);
-            updateDoc(userDocRef, { penaltyUntil: deleteField() });
+            if(appState.currentUser) {
+                const userDocRef = doc(db, "filas", appState.currentUser);
+                updateDoc(userDocRef, { penaltyUntil: deleteField() });
+            }
             return;
         }
 
@@ -305,37 +357,17 @@ function startPenaltyCountdown(penaltyEndTime) {
     }, 1000);
 }
 
-// Agrega esta función nueva en cualquier lugar de tu script.js
-// Reemplaza la función anterior con esta
 async function triggerCheatPenalty() {
-    // Si ya hay una penalización activa, no hace nada más
-    if (appState.penaltyUntil > Date.now()) return;
+    if (appState.penaltyUntil > Date.now() || !appState.currentUser) return;
     
-    closeGame(); // Cierra cualquier juego que esté abierto
+    closeGame();
 
-    const penaltyDuration = 70 * 1000; // 70 segundos en milisegundos
+    const penaltyDuration = 70 * 1000;
     const penaltyEndTime = Date.now() + penaltyDuration;
 
-    // Guarda la fecha de fin de la penalización en Firebase
     const userDocRef = doc(db, "filas", appState.currentUser);
     await updateDoc(userDocRef, { penaltyUntil: penaltyEndTime });
-    
-    // El listener onSnapshot se encargará de mostrar la pantalla y el contador
 }
-document.addEventListener('visibilitychange', () => {
-    // Si la página se oculta Y hay un juego en curso, activa la penalización.
-    if (document.hidden && appState.currentGameId) {
-        triggerCheatPenalty();
-    }
-});
-
-// Detector 2: Copiar texto
-document.addEventListener('copy', (event) => {
-    // Si se copia texto Y hay un juego en curso, activa la penalización.
-    if (appState.currentGameId) {
-        triggerCheatPenalty();
-    }
-});
 
 // --- SESIÓN Y AUTENTICACIÓN ---
 async function handleLogin() {
@@ -355,41 +387,37 @@ async function handleLogin() {
     if (username === PROFESORA) {
         await loadTeacherPanel();
     } else {
-        listenToUserData(username); // <-- CORRECCIÓN: Llamada a la función correcta
+        listenToUserData(username);
     }
 }
 
 function handleLogout() {
-    // Detener listener de Firebase si existe
-    if (appState.unsubscribeSnapshot) {
-        appState.unsubscribeSnapshot();
-        appState.unsubscribeSnapshot = null;
-    }
+    if (appState.unsubscribeSnapshot) appState.unsubscribeSnapshot();
+    if (appState.unsubscribeNotifications) appState.unsubscribeNotifications();
     
-    // Limpiar estado de la aplicación
-    appState.currentUser = null;
-    appState.currentGameId = null;
-    appState.gameData = {};
+    appState = {
+        currentUser: null,
+        currentGameId: null,
+        gameData: {},
+        unsubscribeSnapshot: null,
+        unsubscribeNotifications: null,
+        penaltyUntil: 0,
+        shownNotificationIds: new Set(),
+    };
     
-    // Limpiar localStorage
     localStorage.clear();
     sessionStorage.clear();
     
-    // Limpiar formulario de login
     DOMElements.usernameInput.value = '';
     DOMElements.passwordInput.value = '';
     
-    // Actualizar visibilidad de la UI
     updateUIVisibility();
     
-    // Cerrar juego si está abierto
     closeGame();
     
-    // Opcional: mostrar mensaje de confirmación
-    console.log('Sesión cerrada correctamente');
-
     window.location.href = '/index.html'; 
 }
+
 function checkSession() {
     const user = localStorage.getItem('user');
     if (user && USERS[user]) {
@@ -398,27 +426,26 @@ function checkSession() {
         if (user === PROFESORA) {
             loadTeacherPanel();
         } else {
-            listenToUserData(user); // <-- CORRECCIÓN: Llamada a la función correcta
+            listenToUserData(user);
         }
+    } else {
+        DOMElements.loadingScreen.style.display = 'none';
     }
 }
 
 function updateUIVisibility() {
     const user = appState.currentUser;
     
-    // Mostrar/ocultar pantallas principales
     DOMElements.loginScreen.classList.toggle('hidden', !!user);
     DOMElements.logoutBtn.classList.toggle('hidden', !user);
     DOMElements.studentScreen.classList.toggle('hidden', !user || user === PROFESORA);
     DOMElements.teacherScreen.classList.toggle('hidden', user !== PROFESORA);
 
     if (user && user !== PROFESORA) {
-        // Configurar UI para estudiante
         DOMElements.currentUserName.textContent = user.toUpperCase();
         DOMElements.filaBadge.textContent = user.toUpperCase();
-        DOMElements.userCoins.textContent = '0'; // Se actualizará con el listener
+        DOMElements.userCoins.textContent = '0';
         
-        // Animar la aparición de elementos
         setTimeout(() => {
             const userInfoBar = document.getElementById('userInfoBar');
             const gamesContainer = document.getElementById('gamesContainer');
@@ -428,15 +455,6 @@ function updateUIVisibility() {
             if (gamesContainer) gamesContainer.classList.add('fadein-show');
             if (minecoinsBar) minecoinsBar.classList.add('fadein-show');
         }, 100);
-    } else {
-        // Limpiar UI cuando no hay usuario
-        const userInfoBar = document.getElementById('userInfoBar');
-        const gamesContainer = document.getElementById('gamesContainer');
-        const minecoinsBar = document.getElementById('minecoinsBar');
-        
-        if (userInfoBar) userInfoBar.classList.remove('fadein-show');
-        if (gamesContainer) gamesContainer.classList.remove('fadein-show');
-        if (minecoinsBar) minecoinsBar.classList.remove('fadein-show');
     }
 }
 
@@ -450,10 +468,10 @@ function renderAllGameCards() {
         <div class="games-grid">${games.map(createGameCardHTML).join('')}</div>`;
     
     const quizHTML = createSection('Quizzes de Ciencias Naturales', '📝', GAME_LIST.quizzes);
-    const geologiaHTML = createSection('Quizzes de Geología', '🌋', GAME_LIST.geologia); // SECCIÓN NUEVA
+    const geologiaHTML = createSection('Quizzes de Geología', '🌋', GAME_LIST.geologia);
     const specialHTML = createSection('Juegos Especiales', '⭐', GAME_LIST.special, true);
     
-    DOMElements.gamesContainer.innerHTML = quizHTML + geologiaHTML + specialHTML; // ORDEN MODIFICADO
+    DOMElements.gamesContainer.innerHTML = quizHTML + geologiaHTML + specialHTML;
 }
 
 
@@ -468,9 +486,7 @@ function createGameCardHTML(game) {
 }
 
 // --- LÓGICA DE JUEGOS ---
-// Reemplaza la función anterior con esta
 async function openGame(gameId) {
-    // Verifica si hay una penalización activa
     if (appState.penaltyUntil > Date.now()) {
         alert('Estás penalizado. Espera a que termine el contador.');
         return;
@@ -481,7 +497,7 @@ async function openGame(gameId) {
     const userDocRef = doc(db, "filas", appState.currentUser);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists() && userDoc.data().completedGames?.[gameId]) {
-        alert('Ya completaste este juego. Habla con la profesora para volver a jugarlo.');
+        DOMElements.lockedGameModal.style.display = 'block';
         return;
     }
 
@@ -504,17 +520,16 @@ function closeGame() {
 
 // --- Quiz ---
 function startQuizGame(gameId) {
-    const questions = shuffleArray([...gameQuestions[gameId]]).slice(0, 10); // Tomar 10 preguntas al azar
+    const questions = shuffleArray([...gameQuestions[gameId]]).slice(0, 10);
     appState.gameData = { questions, currentQ: 0, score: 0 };
     showQuizQuestion();
 }
 
 function showQuizQuestion() {
-    const { questions, currentQ, score } = appState.gameData;
+    const { questions, currentQ } = appState.gameData;
     const question = questions[currentQ];
     const progress = ((currentQ + 1) / questions.length) * 100;
     
-    // Randomizar opciones
     let options = question.options.map((option, index) => ({ text: option, originalIndex: index }));
     shuffleArray(options);
     const correctNewIndex = options.findIndex(opt => opt.originalIndex === question.correct);
@@ -534,14 +549,13 @@ function showQuizQuestion() {
     });
 }
 
-function selectAnswer(selectedIndex, correctIndex) {
+async function selectAnswer(selectedIndex, correctIndex) {
     const options = document.querySelectorAll('.option');
-    options.forEach(opt => opt.style.pointerEvents = 'none'); // Deshabilitar clics
+    options.forEach(opt => opt.style.pointerEvents = 'none');
     
     if (selectedIndex === correctIndex) {
         appState.gameData.score++;
         options[selectedIndex].classList.add('correct');
-        markGameAsCompleted(appState.currentGameId);
     } else {
         options[selectedIndex].classList.add('incorrect');
         options[correctIndex].classList.add('correct');
@@ -560,15 +574,23 @@ function selectAnswer(selectedIndex, correctIndex) {
 async function showQuizResults() {
     const { score, questions } = appState.gameData;
     const percentage = (score / questions.length) * 100;
-    const reward = Math.floor(percentage / 100 * 10); // Recompensa base 10
+    const gameId = appState.currentGameId;
+    const gameInfo = GAME_LIST.quizzes.find(g => g.id === gameId) || GAME_LIST.geologia.find(g => g.id === gameId);
+    const baseReward = gameInfo ? gameInfo.reward : 10;
+    const reward = Math.floor(percentage / 100 * baseReward);
 
-    if (reward > 0) await updateUserCoins(reward);
+    if (percentage >= 70) {
+        await markGameAsCompleted(gameId);
+    }
+    if (reward > 0) {
+        await updateUserCoins(reward);
+    }
     
     DOMElements.gameContent.innerHTML = createResultsHTML(
         '¡Quiz Completado!',
         `Respuestas correctas: ${score}/${questions.length}<br>Porcentaje: ${percentage.toFixed(0)}%`,
         reward,
-        () => startQuizGame(appState.currentGameId)
+        percentage < 70
     );
 }
 
@@ -596,8 +618,10 @@ function startMemoryGame() {
 
 function flipCard(e) {
     const card = e.currentTarget;
-    const { flipped, moves } = appState.gameData;
-    if (flipped.length === 2 || card.classList.contains('flipped')) return;
+    const { flipped } = appState.gameData;
+    if (card.classList.contains('flipped') || card.classList.contains('matched') || flipped.length === 2) {
+        return;
+    }
 
     card.classList.add('flipped');
     flipped.push(card);
@@ -609,16 +633,17 @@ function flipCard(e) {
     }
 }
 
-function checkMemoryMatch() {
+async function checkMemoryMatch() {
     const { flipped } = appState.gameData;
     const [card1, card2] = flipped;
+
     if (card1.dataset.id === card2.dataset.id) {
         card1.classList.add('matched');
         card2.classList.add('matched');
         appState.gameData.matched++;
-        markGameAsCompleted('memoria');
         document.getElementById('pairs').textContent = appState.gameData.matched;
         if (appState.gameData.matched === memoryCards.length) {
+            await markGameAsCompleted('memoria');
             showMemoryResults();
         }
     } else {
@@ -639,14 +664,12 @@ async function showMemoryResults() {
     DOMElements.gameContent.innerHTML = createResultsHTML(
         '¡Memoria Completada!',
         `Completado en ${moves} movimientos.`,
-        reward,
-        startMemoryGame
+        reward
     );
 }
 
 // --- Crucigrama ---
 function startCrucigramaGame() {
-    // Elige un crucigrama al azar del array
     const chosenCrucigrama = crucigramaData[Math.floor(Math.random() * crucigramaData.length)];
     appState.gameData = { crucigrama: chosenCrucigrama, words: chosenCrucigrama.words };
 
@@ -658,85 +681,70 @@ function startCrucigramaGame() {
                 <ol>${chosenCrucigrama.words.map(w => `<li>${w.clue}</li>`).join('')}</ol>
             </div>
             <div class="crucigrama-inputs">
-                ${chosenCrucigrama.words.map(w => `
+                ${chosenCrucigrama.words.map((w, index) => `
                     <div class="word-input">
-                        <label>${w.id.slice(-1)}. </label>
+                        <label>${index + 1}. </label>
                         <input type="text" id="${w.id}" maxlength="${w.word.length}" size="${w.word.length}">
                     </div>`).join('')}
             </div>
-            <button class="btn" id="checkCrucigramaBtn">Verificar</button>
-        </div>`;
+        </div>
+        <button class="btn" id="checkCrucigramaBtn" style="display: block; margin: 20px auto;">Verificar</button>`;
     document.getElementById('checkCrucigramaBtn').addEventListener('click', checkCrucigrama);
 }
 
-// Reemplaza la función completa con esta
 async function checkCrucigrama() {
     let correctCount = 0;
-    const currentWords = appState.gameData.words; // <-- LA CORRECCIÓN CLAVE ESTÁ AQUÍ
+    const { words } = appState.gameData.crucigrama;
 
-    currentWords.forEach(wordData => {
+    words.forEach(wordData => {
         const input = document.getElementById(wordData.id);
         if (input && input.value.toUpperCase() === wordData.word) {
             correctCount++;
-            input.style.backgroundColor = '#d4edda';
+            input.style.backgroundColor = 'var(--color-success-glow)';
+            input.style.color = 'black';
         } else if (input) {
-            input.style.backgroundColor = '#f8d7da';
+            input.style.backgroundColor = 'var(--color-danger-glow)';
         }
     });
 
-    if (correctCount > 0) {
-        markGameAsCompleted('crucigrama');
+    const reward = Math.floor((correctCount / words.length) * 20);
+    if (correctCount === words.length) {
+        await markGameAsCompleted('crucigrama');
     }
-
-    const reward = Math.floor((correctCount / currentWords.length) * 20);
-    await updateUserCoins(reward);
+    if (reward > 0) {
+        await updateUserCoins(reward);
+    }
 
     DOMElements.gameContent.innerHTML = createResultsHTML(
         'Crucigrama Verificado',
-        `Respuestas correctas: ${correctCount}/${currentWords.length}`,
+        `Respuestas correctas: ${correctCount}/${words.length}`,
         reward,
-        startCrucigramaGame
+        correctCount !== words.length
     );
 }
 
 // --- Clasificación ---
 function startClasificacionGame() {
     const animals = shuffleArray([...clasificacionAnimals]);
-    const groups = [...new Set(animals.map(a => a.group))];
+    const groups = [...new Set(animals.map(a => a.group))].sort();
     
     DOMElements.gameContent.innerHTML = `
         <h2>Clasificación de Animales</h2>
         <p>Arrastra cada animal a su grupo:</p>
         <div id="animalsToClassify" class="animals-to-classify">
-            ${animals.map(a => `<div class="draggable" draggable="true" data-name="${a.name}">${a.emoji} ${a.name}</div>`).join('')}
+            ${animals.map(a => `<div class="draggable-animal" draggable="true" data-name="${a.name}">${a.emoji} ${a.name}</div>`).join('')}
         </div>
         <div class="classification-groups">
             ${groups.map(g => `<div class="drop-zone" data-group="${g}"><h4>${g}</h4></div>`).join('')}
         </div>
-        <button class="btn" id="checkClasificacionBtn">Verificar</button>`;
+        <button class="btn" id="checkClasificacionBtn" style="display: block; margin: 20px auto;">Verificar</button>`;
         
     setupDragAndDrop();
     document.getElementById('checkClasificacionBtn').addEventListener('click', checkClasificacion);
 }
-// Agrega esta función nueva en cualquier lugar junto a las otras funciones de Firebase
-async function markGameAsCompleted(gameId) {
-    const user = appState.currentUser;
-    if (!user || appState.gameData.isCompleted) return; // Si no hay usuario o ya se marcó, no hace nada
-
-    appState.gameData.isCompleted = true; // Marca como completado para esta sesión
-    const userDocRef = doc(db, "filas", user);
-    try {
-        await updateDoc(userDocRef, {
-            [`completedGames.${gameId}`]: true
-        });
-    } catch (e) {
-        // Si el documento o el mapa no existen, los crea
-        await setDoc(userDocRef, { completedGames: { [gameId]: true } }, { merge: true });
-    }
-}
 
 function setupDragAndDrop() {
-    const draggables = document.querySelectorAll('.draggable');
+    const draggables = document.querySelectorAll('.draggable-animal');
     const dropZones = document.querySelectorAll('.drop-zone');
 
     draggables.forEach(d => {
@@ -748,11 +756,16 @@ function setupDragAndDrop() {
     });
 
     dropZones.forEach(zone => {
-        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
         zone.addEventListener('drop', e => {
             e.preventDefault();
+            zone.classList.remove('drag-over');
             const animalName = e.dataTransfer.getData('text/plain');
-            const draggedEl = document.querySelector(`[data-name="${animalName}"]`);
+            const draggedEl = document.querySelector(`.draggable-animal[data-name="${animalName}"]`);
             if (draggedEl) zone.appendChild(draggedEl);
         });
     });
@@ -760,71 +773,119 @@ function setupDragAndDrop() {
 
 async function checkClasificacion() {
     let correctCount = 0;
-    markGameAsCompleted('clasificacion');
     const total = clasificacionAnimals.length;
     
     document.querySelectorAll('.drop-zone').forEach(zone => {
         const group = zone.dataset.group;
-        zone.querySelectorAll('.draggable').forEach(animalEl => {
+        zone.querySelectorAll('.draggable-animal').forEach(animalEl => {
             const animal = clasificacionAnimals.find(a => a.name === animalEl.dataset.name);
             if (animal && animal.group === group) {
                 correctCount++;
-                animalEl.style.backgroundColor = '#d4edda';
+                animalEl.style.backgroundColor = 'var(--color-success-glow)';
+                animalEl.style.color = 'black';
             } else {
-                animalEl.style.backgroundColor = '#f8d7da';
+                animalEl.style.backgroundColor = 'var(--color-danger-glow)';
             }
         });
     });
 
     const reward = Math.floor((correctCount / total) * 18);
-    await updateUserCoins(reward);
+    if (correctCount === total) {
+        await markGameAsCompleted('clasificacion');
+    }
+    if (reward > 0) {
+        await updateUserCoins(reward);
+    }
 
     DOMElements.gameContent.innerHTML = createResultsHTML(
         'Clasificación Verificada',
         `Clasificaciones correctas: ${correctCount}/${total}`,
         reward,
-        startClasificacionGame
+        correctCount !== total
     );
 }
+
+
+async function markGameAsCompleted(gameId) {
+    const user = appState.currentUser;
+    if (!user || (appState.gameData && appState.gameData.isCompleted)) return;
+
+    if(appState.gameData) appState.gameData.isCompleted = true;
+    
+    const userDocRef = doc(db, "filas", user);
+    try {
+        await updateDoc(userDocRef, {
+            [`completedGames.${gameId}`]: true
+        });
+    } catch (e) {
+        await setDoc(userDocRef, { completedGames: { [gameId]: true } }, { merge: true });
+    }
+}
+
 
 // --- PANEL DE PROFESORA ---
 async function handleTeacherPanelClick(e) {
     const target = e.target;
     const fila = target.dataset.fila;
 
-    if (!fila && !target.matches('#addCoinsToAllBtn, #removeCoinsFromAllBtn')) return;
+    if (!fila && !target.matches('#addCoinsToAllBtn, #removeCoinsFromAllBtn, .btn-reset-game, .btn-penalize, .btn-remove-penalty')) return;
 
     const userDocRef = fila ? doc(db, "filas", fila) : null;
 
     if (target.matches('.btn-add, .btn-remove')) {
-        const amount = parseInt(document.getElementById(`coins-${fila}`).value);
+        const amountInput = document.getElementById(`coins-${fila}`);
+        const amount = parseInt(amountInput.value);
         if (!amount || amount <= 0) return alert('Ingresa una cantidad válida.');
+        
         const operation = target.matches('.btn-add') ? amount : -amount;
         await updateUserCoins(operation, fila);
+        
+        const notifMsg = `Te han ${operation > 0 ? 'agregado' : 'quitado'} <strong>${Math.abs(operation)}</strong> minecoins.`;
+        const notifType = operation > 0 ? 'success' : 'danger';
+        await sendNotification(fila, notifMsg, notifType);
+
+        amountInput.value = '';
+
     } else if (target.matches('#addCoinsToAllBtn, #removeCoinsFromAllBtn')) {
-        const amount = parseInt(document.getElementById('globalCoins').value);
+        const amountInput = document.getElementById('globalCoins');
+        const amount = parseInt(amountInput.value);
         if (!amount || amount <= 0) return alert('Ingresa una cantidad válida.');
+        
         const operation = target.id === 'addCoinsToAllBtn' ? amount : -amount;
         const promises = FILAS_VALIDAS.map(f => updateUserCoins(operation, f));
         await Promise.all(promises);
+        
+        const notifMsg = `Se han ${operation > 0 ? 'otorgado' : 'quitado'} globalmente <strong>${Math.abs(operation)}</strong> minecoins.`;
+        await sendNotification('global', notifMsg, 'info');
+
+        amountInput.value = '';
+
     } else if (target.matches('.btn-reset-game')) {
         const gameId = target.dataset.gameId;
+        const allGames = [...GAME_LIST.quizzes, ...GAME_LIST.geologia, ...GAME_LIST.special];
+        const gameInfo = allGames.find(g => g.id === gameId);
+        const gameTitle = gameInfo ? gameInfo.title : gameId;
+        
         if (userDocRef && gameId) {
-            await updateDoc(userDocRef, { [`completedGames.${gameId}`]: false });
+            await updateDoc(userDocRef, { [`completedGames.${gameId}`]: deleteField() });
+            await sendNotification(fila, `Ya puedes volver a jugar a <strong>${gameTitle}</strong>.`, 'info');
         }
-    } 
-    // --- NUEVO: Lógica para penalizar y quitar castigo ---
-    else if (target.matches('.btn-penalize')) {
-        const penaltyEndTime = Date.now() + 70 * 1000; // Penalización estándar de 70s
-        if (userDocRef) await updateDoc(userDocRef, { penaltyUntil: penaltyEndTime });
+
+    } else if (target.matches('.btn-penalize')) {
+        const penaltyEndTime = Date.now() + 70 * 1000;
+        if (userDocRef) {
+            await updateDoc(userDocRef, { penaltyUntil: penaltyEndTime });
+            await sendNotification(fila, 'Has sido penalizado. Habla con el staff para más detalles.', 'danger');
+        }
+
     } else if (target.matches('.btn-remove-penalty')) {
-        if (userDocRef) await updateDoc(userDocRef, { penaltyUntil: deleteField() });
+        if (userDocRef) {
+            await updateDoc(userDocRef, { penaltyUntil: deleteField() });
+            await sendNotification(fila, 'Se ha levantado tu penalización. ¡Vuelves a estar en juego!', 'success');
+        }
     }
 
-    // Recargar el panel para ver los cambios
-    if (target.closest('.fila-row') || target.closest('.global-controls')) {
-        loadTeacherPanel();
-    }
+    loadTeacherPanel();
 }
 
 async function loadTeacherPanel() {
@@ -834,6 +895,8 @@ async function loadTeacherPanel() {
     snapshot.forEach(doc => filasData[doc.id] = doc.data());
 
     const managementDiv = document.getElementById('filasManagement');
+    if (!managementDiv) return;
+
     managementDiv.innerHTML = FILAS_VALIDAS.map(fila => {
         const data = filasData[fila] || {};
         const coins = data.coins || 0;
@@ -841,16 +904,19 @@ async function loadTeacherPanel() {
         const penaltyEndTime = data.penaltyUntil || 0;
         const isPenaltyActive = penaltyEndTime > Date.now();
 
+        const allGames = [...GAME_LIST.quizzes, ...GAME_LIST.geologia, ...GAME_LIST.special];
         const completedGamesHTML = Object.entries(completedGames)
             .filter(([_, isCompleted]) => isCompleted)
-            .map(([gameId]) => `
-                <div class="completed-game-item">
-                    <span>${gameId}</span>
+            .map(([gameId]) => {
+                const gameInfo = allGames.find(g => g.id === gameId);
+                const gameTitle = gameInfo ? gameInfo.title : gameId;
+                return `
+                <div class="completed-game-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span>${gameTitle}</span>
                     <button class="btn-teacher btn-reset-game" data-fila="${fila}" data-game-id="${gameId}">Reset</button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
-        // --- NUEVO: Botón dinámico de penalización ---
         const penaltyControlHTML = isPenaltyActive
             ? `<button class="btn-teacher btn-remove-penalty" data-fila="${fila}">Quitar Castigo</button>`
             : `<button class="btn-teacher btn-penalize" data-fila="${fila}">Penalizar</button>`;
@@ -874,7 +940,7 @@ async function loadTeacherPanel() {
                     <div class="penalty-controls">
                         <h5>Gestión de Penalización:</h5>
                         ${penaltyControlHTML}
-                        ${isPenaltyActive ? `<small>Activo hasta: ${new Date(penaltyEndTime).toLocaleTimeString()}</small>` : ''}
+                        ${isPenaltyActive ? `<small style="display: block; margin-top: 5px;">Activo hasta: ${new Date(penaltyEndTime).toLocaleTimeString()}</small>` : ''}
                     </div>
                 </div>
             </div>`;
@@ -889,32 +955,23 @@ function shuffleArray(array) {
     return array;
 }
 
-function createResultsHTML(title, scoreText, reward, restartCallback) {
+function createResultsHTML(title, scoreText, reward, allowRestart = true) {
     return `
         <div class="game-completed">
             <h3>${title}</h3>
             <div class="score-display">${scoreText}</div>
             ${reward > 0 ? `
-                <div class="coins-earned">
-                    <div class="coin-icon">₿</div>
+                <div class="coins-earned" style="font-size: 1.5em; color: var(--color-warning-glow); margin: 20px 0;">
+                    <div class="coin-icon" style="display: inline-block;">₿</div>
                     ¡Ganaste ${reward} Minecoins!
                 </div>` : '<p>¡Sigue intentando para ganar monedas!</p>'
             }
             <div class="results-buttons">
-                <button class="btn btn-restart">Jugar de Nuevo</button>
+                ${allowRestart ? '<button class="btn btn-restart">Jugar de Nuevo</button>' : ''}
                 <button class="btn btn-close-results">Cerrar</button>
             </div>
         </div>`;
 }
-
-// Re-conectar botones de resultados
-document.addEventListener('click', e => {
-    if (e.target.matches('.btn-restart')) {
-        const restartFunc = window.restartGameFunc;
-        if(restartFunc) restartFunc();
-    }
-    if (e.target.matches('.btn-close-results')) closeGame();
-});
 
 // --- INTERACCIÓN CON FIREBASE ---
 async function getUserCoins(fila) {
@@ -923,7 +980,7 @@ async function getUserCoins(fila) {
     if (snap.exists() && typeof snap.data().coins !== 'undefined') {
         return Number(snap.data().coins);
     }
-    await setDoc(ref, { coins: 0 }); // Si no existe, lo crea con 0
+    await setDoc(ref, { coins: 0 }, { merge: true });
     return 0;
 }
 
@@ -936,35 +993,107 @@ async function updateUserCoins(amount, fila = null) {
     await setDoc(ref, { coins: newCoins }, { merge: true });
 }
 
-// Reemplaza tu función listenToUserCoins con esta nueva versión
 function listenToUserData(fila) {
     if (appState.unsubscribeSnapshot) appState.unsubscribeSnapshot();
     const userDocRef = doc(db, "filas", fila);
     appState.unsubscribeSnapshot = onSnapshot(userDocRef, (snap) => {
-        if (!snap.exists()) return;
+        if (!snap.exists()) { 
+            setDoc(userDocRef, { coins: 0, completedGames: {} });
+            return;
+        }
         const data = snap.data();
         
-        // Actualiza las monedas
-        const coins = data.coins ? Number(data.coins) : 0;
-        DOMElements.userCoins.textContent = coins;
+        DOMElements.userCoins.textContent = data.coins ? Number(data.coins) : 0;
 
-        // Actualiza la UI de juegos bloqueados
         const completedGames = data.completedGames || {};
         document.querySelectorAll('.game-card').forEach(card => {
             const gameId = card.dataset.gameId;
-            card.classList.toggle('locked', !!completedGames[gameId]);
+            const isCompleted = completedGames[gameId] === true;
+            card.classList.toggle('completed', isCompleted);
+            const rewardEl = card.querySelector('.game-reward');
+            if (isCompleted && rewardEl) {
+                rewardEl.textContent = "COMPLETADO";
+            }
         });
-
-        // --- BLOQUE NUEVO: GESTIÓN DE PENALIZACIÓN PERSISTENTE ---
+        
         const penaltyEndTime = data.penaltyUntil || 0;
-        appState.penaltyUntil = penaltyEndTime; // Sincroniza el estado local
+        appState.penaltyUntil = penaltyEndTime;
 
         if (penaltyEndTime > Date.now()) {
             startPenaltyCountdown(penaltyEndTime);
         } else {
-            // Si no hay penalización o ya expiró, se asegura de que la pantalla esté oculta
             DOMElements.cheatPenaltyScreen.style.display = 'none';
         }
-        // --- FIN DEL BLOQUE ---
     });
+
+    // --- LÓGICA DE NOTIFICACIONES EN TIEMPO REAL ---
+    if (appState.unsubscribeNotifications) appState.unsubscribeNotifications();
+
+    const q = query(
+        collection(db, "notifications"),
+        where("targetFila", "in", [appState.currentUser, "global"]),
+        orderBy("timestamp", "desc"),
+        limit(10)
+    );
+
+    appState.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            // Solo reaccionar a notificaciones nuevas que no hayamos mostrado ya
+            if (change.type === "added" && !appState.shownNotificationIds.has(change.doc.id)) {
+                const notification = change.doc.data();
+                const now = Date.now();
+                // Solo mostrar si la notificación es reciente (ej: últimos 60 seg)
+                // para no bombardear al usuario con notificaciones viejas al iniciar sesión.
+                if (notification.timestamp && (now - notification.timestamp.toMillis()) < 60000) {
+                    showNotification(notification.message, notification.type);
+                }
+                appState.shownNotificationIds.add(change.doc.id);
+            }
+        });
+    });
+}
+
+
+async function showLeaderboard() {
+    const leaderboardContent = document.getElementById('leaderboardContent');
+    if (!leaderboardContent) return;
+    
+    leaderboardContent.innerHTML = '<p style="text-align:center;">Cargando puntajes...</p>';
+    DOMElements.leaderboardModal.style.display = 'block';
+
+    try {
+        const filasRef = collection(db, "filas");
+        const q = query(filasRef, where("coins", ">", -1)); // Filtro para asegurar que el campo exista
+        const snapshot = await getDocs(q);
+        let filasData = [];
+
+        snapshot.forEach(doc => {
+            if (FILAS_VALIDAS.includes(doc.id)) {
+                filasData.push({
+                    name: doc.id.toUpperCase(),
+                    coins: doc.data().coins || 0
+                });
+            }
+        });
+
+        filasData.sort((a, b) => b.coins - a.coins);
+
+        const medals = ['🥇', '🥈', '🥉'];
+        const listHTML = filasData.map((fila, index) => `
+            <li>
+                <span class="rank">${medals[index] || `<strong>#${index + 1}</strong>`}</span>
+                <span class="name">${fila.name}</span>
+                <span class="coins">₿ ${fila.coins}</span>
+            </li>
+        `).join('');
+
+        if (filasData.length > 0) {
+            leaderboardContent.innerHTML = `<ol>${listHTML}</ol>`;
+        } else {
+            leaderboardContent.innerHTML = '<p style="text-align:center;">Aún no hay puntajes para mostrar.</p>';
+        }
+    } catch (error) {
+        console.error("Error al cargar el leaderboard: ", error);
+        leaderboardContent.innerHTML = '<p style="text-align:center; color: var(--color-danger-glow);">No se pudieron cargar los puntajes.</p>';
+    }
 }
